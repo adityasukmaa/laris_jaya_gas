@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:laris_jaya_gas/models/tabung_model.dart';
 import 'package:laris_jaya_gas/utils/constants.dart';
@@ -6,7 +7,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:path/path.dart' as path;
+import 'package:pdf/widgets.dart' as pw;
+import 'package:image/image.dart' as img;
 import '../../utils/dummy_data.dart';
 
 class DetailTabungScreen extends StatelessWidget {
@@ -14,8 +18,91 @@ class DetailTabungScreen extends StatelessWidget {
 
   const DetailTabungScreen({super.key});
 
-  Future<void> _downloadQRCode(String kodeTabung, String qrCodeBase64) async {
-    // Validasi apakah qrCodeBase64 kosong
+  Future<bool> _checkAndRequestPermission() async {
+    Permission permission;
+    PermissionStatus status;
+
+    if (Platform.isAndroid) {
+      try {
+        var androidInfo = await DeviceInfoPlugin().androidInfo;
+        int sdkInt = androidInfo.version.sdkInt ?? 0;
+
+        if (sdkInt >= 30) {
+          permission = Permission.manageExternalStorage;
+        } else {
+          permission = Permission.storage;
+        }
+
+        status = await permission.status;
+
+        if (!status.isGranted) {
+          bool? shouldProceed = await Get.dialog<bool>(
+            AlertDialog(
+              title: const Text('Izin Penyimpanan Diperlukan'),
+              content: const Text(
+                  'Aplikasi membutuhkan izin penyimpanan untuk menyimpan QR Code ke PDF. Izinkan akses?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Get.back(result: false),
+                  child: const Text('Tidak'),
+                ),
+                TextButton(
+                  onPressed: () => Get.back(result: true),
+                  child: const Text('Izinkan'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldProceed != true) {
+            Get.snackbar(
+              'Izin Ditolak',
+              'Izin penyimpanan diperlukan untuk menyimpan QR Code.',
+              backgroundColor: Colors.orange,
+              colorText: Colors.white,
+            );
+            return false;
+          }
+
+          status = await permission.request();
+
+          if (status.isPermanentlyDenied) {
+            Get.snackbar(
+              'Izin Ditolak',
+              'Izin penyimpanan ditolak secara permanen. Silakan aktifkan di pengaturan.',
+              backgroundColor: Colors.orange,
+              colorText: Colors.white,
+              mainButton: TextButton(
+                onPressed: () => openAppSettings(),
+                child: const Text('Buka Pengaturan'),
+              ),
+            );
+            return false;
+          } else if (!status.isGranted) {
+            Get.snackbar(
+              'Izin Ditolak',
+              'Izin penyimpanan diperlukan untuk menyimpan QR Code.',
+              backgroundColor: Colors.orange,
+              colorText: Colors.white,
+            );
+            return false;
+          }
+        }
+      } catch (e) {
+        Get.snackbar(
+          'Error',
+          'Gagal memeriksa informasi perangkat: ${e.toString()}',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _downloadQRCodeAsPDF(
+      String kodeTabung, String qrCodeBase64) async {
     if (qrCodeBase64.isEmpty) {
       Get.snackbar(
         'Error',
@@ -26,95 +113,91 @@ class DetailTabungScreen extends StatelessWidget {
       return;
     }
 
-    // Tentukan izin berdasarkan platform
-    Permission permission;
-    if (Platform.isAndroid && await Permission.photos.isGranted) {
-      permission = Permission.photos;
-    } else if (Platform.isIOS) {
-      permission = Permission.photos;
-    } else {
-      permission = Permission.storage; // Untuk Android < 13 atau platform lain
-    }
+    bool hasPermission = await _checkAndRequestPermission();
+    if (!hasPermission) return;
 
-    var permissionStatus = await permission.status;
-
-    if (!permissionStatus.isGranted) {
-      permissionStatus = await permission.request();
-
-      if (permissionStatus.isPermanentlyDenied) {
-        Get.snackbar(
-          'Izin Ditolak',
-          'Izin penyimpanan ditolak secara permanen. Silakan aktifkan di pengaturan.',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          mainButton: TextButton(
-            onPressed: () => openAppSettings(),
-            child: const Text('Buka Pengaturan'),
-          ),
-        );
-        return;
-      } else if (!permissionStatus.isGranted) {
-        Get.snackbar(
-          'Izin Ditolak',
-          'Izin penyimpanan diperlukan untuk menyimpan QR Code.',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
-        return;
-      }
-    }
-
-    if (permissionStatus.isGranted) {
-      try {
-        // Dekode base64 menjadi data gambar
-        final qrCodeData = base64Decode(qrCodeBase64);
-
-        // Dapatkan direktori penyimpanan publik (Pictures)
-        final directory = await getExternalStorageDirectory();
-        if (directory == null) {
-          Get.snackbar(
-            'Error',
-            'Direktori penyimpanan tidak ditemukan.',
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-          return;
-        }
-
-        // Buat subfolder LarisJayaGas di Pictures
-        final picturesDir =
-            Directory('${directory.parent.path}/Pictures/LarisJayaGas');
-        if (!await picturesDir.exists()) {
-          await picturesDir.create(recursive: true);
-        }
-
-        // Buat nama file unik
-        final fileName =
-            '${kodeTabung}_qrcode_${DateTime.now().millisecondsSinceEpoch}.png';
-        final filePath = '${picturesDir.path}/$fileName';
-
-        // Simpan gambar ke direktori
-        final file = File(filePath);
-        await file.writeAsBytes(qrCodeData);
-
-        // Refresh galeri (opsional, tergantung perangkat)
-        // Untuk memperbarui galeri di Android, Anda bisa menggunakan plugin seperti 'gallery_saver' jika diperlukan.
-        // Saat ini, file sudah disimpan di direktori Pictures/LarisJayaGas.
-
-        Get.snackbar(
-          'Sukses',
-          'QR Code berhasil disimpan di galeri: $filePath',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      } catch (e) {
+    try {
+      // Decode base64 ke gambar
+      final qrCodeData = base64Decode(qrCodeBase64);
+      final tempImage = img.decodeImage(qrCodeData);
+      if (tempImage == null) {
         Get.snackbar(
           'Error',
-          'Gagal menyimpan QR Code: ${e.toString()}',
+          'Gagal mendekode gambar QR Code.',
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
+        return;
       }
+
+      // Buat dokumen PDF
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                pw.Text('Detail Tabung - $kodeTabung',
+                    style: pw.TextStyle(fontSize: 24)),
+                pw.SizedBox(height: 20),
+                pw.Text('Kode Tabung: $kodeTabung',
+                    style: pw.TextStyle(fontSize: 16)),
+                pw.SizedBox(height: 20),
+                pw.Image(pw.MemoryImage(qrCodeData), width: 150, height: 150),
+                pw.Text('QR Code untuk Tabung $kodeTabung',
+                    style: pw.TextStyle(fontSize: 12)),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Simpan PDF ke direktori publik
+      String documentsDirPath = '/storage/emulated/0/Documents/LarisJayaGas';
+      final documentsDir = Directory(documentsDirPath);
+      if (!await documentsDir.exists()) {
+        await documentsDir.create(recursive: true);
+      }
+
+      final fileName =
+          '${kodeTabung}_qrcode_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final filePath = path.join(documentsDir.path, fileName);
+      final file = File(filePath);
+      await file.writeAsBytes(await pdf.save());
+
+      // Refresh galeri
+      await _refreshGallery(filePath);
+
+      Get.snackbar(
+        'Sukses',
+        'PDF berhasil disimpan di galeri: $filePath',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal menyimpan QR Code sebagai PDF: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _refreshGallery(String filePath) async {
+    final uri = Uri.parse('file://$filePath');
+    final platform = MethodChannel('com.example.laris_jaya_gas/gallery');
+    try {
+      await platform.invokeMethod('scanFile', {'path': uri.toString()});
+    } catch (e) {
+      Get.snackbar(
+        'Info',
+        'File disimpan, tetapi pemindaian galeri gagal. Periksa secara manual di $filePath.',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+      );
     }
   }
 
@@ -178,8 +261,8 @@ class DetailTabungScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: tabung.qrCode.isNotEmpty
-                          ? () =>
-                              _downloadQRCode(tabung.kodeTabung, tabung.qrCode)
+                          ? () => _downloadQRCodeAsPDF(
+                              tabung.kodeTabung, tabung.qrCode)
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.secondary,
@@ -189,7 +272,7 @@ class DetailTabungScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(0)),
                       ),
                       child: const Text(
-                        'Unduh QR Code',
+                        'Unduh QR Code sebagai PDF',
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),

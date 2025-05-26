@@ -23,17 +23,17 @@ class DummyData {
 
   static List<Tabung> tabungList = [
     Tabung(
-        kodeTabung: 'TB001',
+        kodeTabung: 'OXY001',
         jenisTabung: 'Oksigen',
         status: 'Tersedia',
         qrCode: 'base64string'),
     Tabung(
-        kodeTabung: 'TB002',
+        kodeTabung: 'NT001',
         jenisTabung: 'Nitrogen',
         status: 'Dipinjam',
         qrCode: 'base64string'),
     Tabung(
-        kodeTabung: 'TB003',
+        kodeTabung: 'AR001',
         jenisTabung: 'Argon',
         status: 'Tersedia',
         qrCode: 'base64string'),
