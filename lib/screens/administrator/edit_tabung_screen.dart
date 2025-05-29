@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:laris_jaya_gas/models/jenis_tabung_model.dart';
+import 'package:laris_jaya_gas/models/status_tabung_model.dart';
 import 'package:laris_jaya_gas/models/tabung_model.dart';
+import 'package:laris_jaya_gas/utils/constants.dart';
 import '../../utils/dummy_data.dart';
 
 class EditTabungScreen extends StatefulWidget {
-  const EditTabungScreen({super.key, required Center body});
+  const EditTabungScreen({super.key, required String kodeTabung});
 
   @override
   State<EditTabungScreen> createState() => _EditTabungScreenState();
@@ -14,15 +17,11 @@ class _EditTabungScreenState extends State<EditTabungScreen> {
   final Color primaryBlue = const Color(0xFF0172B2); // Warna utama aplikasi
   final Color darkBlue = const Color(0xFF001848); // Warna sekunder aplikasi
 
-  // Daftar opsi untuk dropdown jenis tabung dan status tabung
-  final List<String> jenisTabungList = [
-    'Oksigen',
-    'Nitrogen',
-    'Argon',
-    'Acetelyne',
-    'Dinitrogen Oksida'
-  ];
-  final List<String> statusTabungList = ['Tersedia', 'Dipinjam'];
+  // Daftar opsi untuk dropdown jenis tabung dan status tabung dari DummyData
+  final List<String> jenisTabungList =
+      DummyData.jenisTabungList.map((jenis) => jenis.namaJenis).toList();
+  final List<String> statusTabungList =
+      DummyData.statusTabungList.map((status) => status.statusTabung).toList();
 
   // Controller untuk form input
   final TextEditingController kodeTabungController = TextEditingController();
@@ -40,12 +39,19 @@ class _EditTabungScreenState extends State<EditTabungScreen> {
       // Cari tabung berdasarkan kode
       final tabung = DummyData.tabungList.firstWhere(
         (tabung) => tabung.kodeTabung == kodeTabung,
-        orElse: () =>
-            Tabung(kodeTabung: '', jenisTabung: '', status: '', qrCode: ''),
+        orElse: () => Tabung(
+          idTabung: '',
+          kodeTabung: '',
+          idJenisTabung: '',
+          idStatusTabung: '',
+          jenisTabung: JenisTabung(
+              idJenisTabung: '', kodeJenis: '', namaJenis: '', harga: 0.0),
+          statusTabung: StatusTabung(idStatusTabung: '', statusTabung: ''),
+        ),
       );
       kodeTabungController.text = tabung.kodeTabung;
-      selectedJenis = tabung.jenisTabung;
-      selectedStatus = tabung.status;
+      selectedJenis = tabung.jenisTabung?.namaJenis;
+      selectedStatus = tabung.statusTabung?.statusTabung;
     }
   }
 
@@ -62,15 +68,31 @@ class _EditTabungScreenState extends State<EditTabungScreen> {
       final index = DummyData.tabungList
           .indexWhere((tabung) => tabung.kodeTabung == kodeTabung);
       if (index != -1) {
-        DummyData.tabungList[index] = Tabung(
-          kodeTabung: kodeTabungController.text,
-          jenisTabung: selectedJenis!,
-          status: selectedStatus!,
-          qrCode: '',
+        // Cari idJenisTabung dan idStatusTabung berdasarkan pilihan pengguna
+        final selectedJenisTabung = DummyData.jenisTabungList.firstWhere(
+          (jenis) => jenis.namaJenis == selectedJenis,
+          orElse: () => JenisTabung(
+              idJenisTabung: '', kodeJenis: '', namaJenis: '', harga: 0.0),
         );
+        final selectedStatusTabung = DummyData.statusTabungList.firstWhere(
+          (status) => status.statusTabung == selectedStatus,
+          orElse: () => StatusTabung(idStatusTabung: '', statusTabung: ''),
+        );
+
+        final updatedTabung = Tabung(
+          idTabung: DummyData.tabungList[index].idTabung,
+          kodeTabung: kodeTabungController.text,
+          idJenisTabung: selectedJenisTabung.idJenisTabung,
+          idStatusTabung: selectedStatusTabung.idStatusTabung,
+          jenisTabung: selectedJenisTabung,
+          statusTabung: selectedStatusTabung,
+        );
+        DummyData.tabungList[index] = updatedTabung;
+
         Get.back(); // Kembali ke halaman sebelumnya
         Get.snackbar('Sukses', 'Tabung berhasil diperbarui',
-            backgroundColor: primaryBlue, colorText: Colors.white);
+            backgroundColor: AppColors.whiteSemiTransparent,
+            colorText: Colors.black);
       } else {
         Get.snackbar('Error', 'Tabung tidak ditemukan',
             backgroundColor: Colors.red, colorText: Colors.white);
@@ -276,13 +298,14 @@ class _EditTabungScreenState extends State<EditTabungScreen> {
                         onPressed: _cancelEdit,
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: BorderSide(color: primaryBlue),
+                          side: BorderSide(color: AppColors.secondary),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0)),
+                              borderRadius: BorderRadius.circular(8)),
                         ),
                         child: Text(
                           'Batal',
-                          style: TextStyle(color: primaryBlue, fontSize: 16),
+                          style: TextStyle(
+                              color: AppColors.secondary, fontSize: 16),
                         ),
                       ),
                     ),
@@ -294,7 +317,7 @@ class _EditTabungScreenState extends State<EditTabungScreen> {
                           backgroundColor: darkBlue,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0)),
+                              borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text(
                           'Simpan',

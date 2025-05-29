@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:laris_jaya_gas/models/jenis_tabung_model.dart';
+import 'package:laris_jaya_gas/models/status_tabung_model.dart';
 import 'package:laris_jaya_gas/models/tabung_model.dart';
 import 'package:laris_jaya_gas/utils/constants.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:pdf/widgets.dart' as pw;
-import 'package:image/image.dart' as img;
 import '../../utils/dummy_data.dart';
 
 class DetailTabungScreen extends StatelessWidget {
   final Color primaryBlue = const Color(0xFF0172B2);
+  final GlobalKey _qrKey = GlobalKey(); // Key untuk menangkap QR code
 
-  const DetailTabungScreen({super.key});
+  DetailTabungScreen({super.key});
 
   Future<bool> _checkAndRequestPermission() async {
     Permission permission;
@@ -25,7 +28,7 @@ class DetailTabungScreen extends StatelessWidget {
     if (Platform.isAndroid) {
       try {
         var androidInfo = await DeviceInfoPlugin().androidInfo;
-        int sdkInt = androidInfo.version.sdkInt ?? 0;
+        int sdkInt = androidInfo.version.sdkInt;
 
         if (sdkInt >= 30) {
           permission = Permission.manageExternalStorage;
@@ -101,36 +104,41 @@ class DetailTabungScreen extends StatelessWidget {
     return true;
   }
 
-  Future<void> _downloadQRCodeAsPDF(
-      String kodeTabung, String qrCodeBase64) async {
-    if (qrCodeBase64.isEmpty) {
+  Future<Uint8List?> _captureQrCode() async {
+    try {
+      final boundary =
+          _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    } catch (e) {
       Get.snackbar(
         'Error',
-        'Tidak ada gambar QR Code yang bisa diunduh.',
+        'Gagal menangkap QR Code: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return null;
+    }
+  }
+
+  Future<void> _downloadQRCodeAsPDF(String kodeTabung) async {
+    bool hasPermission = await _checkAndRequestPermission();
+    if (!hasPermission) return;
+
+    final qrImageData = await _captureQrCode();
+    if (qrImageData == null) {
+      Get.snackbar(
+        'Error',
+        'Gagal menangkap gambar QR Code.',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
       return;
     }
 
-    bool hasPermission = await _checkAndRequestPermission();
-    if (!hasPermission) return;
-
     try {
-      // Decode base64 ke gambar
-      final qrCodeData = base64Decode(qrCodeBase64);
-      final tempImage = img.decodeImage(qrCodeData);
-      if (tempImage == null) {
-        Get.snackbar(
-          'Error',
-          'Gagal mendekode gambar QR Code.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      // Buat dokumen PDF
       final pdf = pw.Document();
 
       pdf.addPage(
@@ -145,7 +153,7 @@ class DetailTabungScreen extends StatelessWidget {
                 pw.Text('Kode Tabung: $kodeTabung',
                     style: pw.TextStyle(fontSize: 16)),
                 pw.SizedBox(height: 20),
-                pw.Image(pw.MemoryImage(qrCodeData), width: 150, height: 150),
+                pw.Image(pw.MemoryImage(qrImageData), width: 150, height: 150),
                 pw.Text('QR Code untuk Tabung $kodeTabung',
                     style: pw.TextStyle(fontSize: 12)),
               ],
@@ -167,7 +175,6 @@ class DetailTabungScreen extends StatelessWidget {
       final file = File(filePath);
       await file.writeAsBytes(await pdf.save());
 
-      // Refresh galeri
       await _refreshGallery(filePath);
 
       Get.snackbar(
@@ -206,9 +213,37 @@ class DetailTabungScreen extends StatelessWidget {
     final String? kodeTabung = Get.arguments as String?;
     final tabung = DummyData.tabungList.firstWhere(
       (tabung) => tabung.kodeTabung == kodeTabung,
-      orElse: () =>
-          Tabung(kodeTabung: '', jenisTabung: '', status: '', qrCode: ''),
+      orElse: () => Tabung(
+        kodeTabung: '',
+        idJenisTabung: '',
+        idStatusTabung: '',
+        jenisTabung: JenisTabung(
+            idJenisTabung: '', kodeJenis: '', namaJenis: '', harga: 0.0),
+        statusTabung: StatusTabung(idStatusTabung: '', statusTabung: ''),
+      ),
     );
+
+    // Cek jika tabung tidak ditemukan
+    if (tabung.kodeTabung.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: primaryBlue,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Get.back(),
+          ),
+          title: const Text('Detail Tabung',
+              style: TextStyle(color: Colors.white)),
+        ),
+        body: const Center(
+          child: Text(
+            'Tabung tidak ditemukan',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+      );
+    }
 
     final double screenHeight = MediaQuery.of(context).size.height;
     final double paddingVertical = screenHeight * 0.02;
@@ -239,37 +274,37 @@ class DetailTabungScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Jenis Tabung: ${tabung.jenisTabung}',
+                'Jenis Tabung: ${tabung.jenisTabung?.namaJenis ?? 'Unknown'}',
                 style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 16),
               Text(
-                'Status Tabung: ${tabung.status}',
+                'Status Tabung: ${tabung.statusTabung?.statusTabung ?? 'Unknown'}',
                 style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 32),
               Center(
                 child: Column(
                   children: [
-                    tabung.qrCode.isNotEmpty
-                        ? QrImageView(
-                            data: tabung.kodeTabung,
-                            version: QrVersions.auto,
-                            size: 200.0,
-                          )
-                        : const Text('QR Code tidak tersedia'),
+                    RepaintBoundary(
+                      key: _qrKey,
+                      child: QrImageView(
+                        data: tabung.kodeTabung,
+                        version: QrVersions.auto,
+                        size: 200.0,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: tabung.qrCode.isNotEmpty
-                          ? () => _downloadQRCodeAsPDF(
-                              tabung.kodeTabung, tabung.qrCode)
-                          : null,
+                      onPressed: () => _downloadQRCodeAsPDF(tabung.kodeTabung),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                             vertical: 12, horizontal: 24),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(0)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text(
                         'Unduh QR Code sebagai PDF',

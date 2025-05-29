@@ -1,65 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../../controllers/auth_controller.dart';
-import '../../utils/dummy_data.dart';
-import '../../widgets/primary_button.dart';
+import 'package:laris_jaya_gas/models/akun_model.dart';
+import 'package:laris_jaya_gas/controllers/auth_controller.dart';
+import 'package:laris_jaya_gas/widgets/primary_button.dart';
+import 'package:laris_jaya_gas/utils/constants.dart';
+import 'package:laris_jaya_gas/utils/dummy_data.dart';
 
 class DashboardAdministratorScreen extends StatelessWidget {
-  final Color primaryBlue = const Color(0xFF0172B2);
-
   const DashboardAdministratorScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
-    // Ambil data dari DummyData
-    final administratorData = DummyData.administratorData;
-    final String namaPengguna = administratorData['name'] ?? 'Apriliady Rahman';
-    final String email = administratorData['email'] ?? 'aprilia@gmail.com';
-    final String phone = administratorData['phone'] ?? '081355189363';
-    final String role = administratorData['role'] ?? 'Administrator';
+    // Periksa apakah pengguna sudah login dan memiliki role administrator
+    if (!authController.isLoggedIn.value ||
+        authController.userRole.value != 'administrator') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.offAllNamed('/');
+      });
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Ambil data akun administrator dari DummyData
+    final Akun adminAkun = DummyData.akunList.firstWhere(
+      (akun) => akun.role == 'administrator',
+      orElse: () => Akun(
+        idAkun: 'AKN001',
+        email: 'aprilia@gmail.com',
+        password: 'pass123',
+        role: 'administrator',
+        statusAktif: true,
+      ),
+    );
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: primaryBlue,
+      statusBarColor: AppColors.primaryBlue,
       statusBarIconBrightness: Brightness.light,
     ));
 
-    // Hitung transactionCount dari transaksiList
-    int transactionCount = DummyData.transaksiList
-        .where((transaksi) =>
-            transaksi.status == 'pending' || transaksi.status == 'success')
-        .length;
-
-    // Hitung stockCount dari tabungList (misalnya, total tabung tersedia)
-    int stockCount = DummyData.tabungList
-        .where((tabung) => tabung.status == 'Tersedia')
-        .length;
-
-    // Hitung historyCount dari riwayatTransaksiList
-    int historyCount = DummyData.riwayatTransaksiList.length;
-
-    // Hitung customerCount (sementara dari pelangganData, bisa diperluas)
-    int customerCount = 1; // Hanya 1 pelanggan (Budi Santoso) untuk saat ini
-
     // Dapatkan tinggi layar untuk penyesuaian dinamis
     final double screenHeight = MediaQuery.of(context).size.height;
-    final double headerHeight = screenHeight * 0.40; // 20% dari tinggi layar
     final double paddingTop = screenHeight * 0.05; // 5% dari tinggi layar
-    final double paddingBottom = screenHeight * 0.01; // 1% dari tinggi layar
+
+    // Hitung statistik dari DummyData
+    final int totalTransaksiBerjalan = DummyData.transaksiList
+        .where((transaksi) => transaksi.statusTransaksi?.status == 'pending')
+        .length;
+    final int transactionCount = DummyData.transaksiList
+        .where((transaksi) =>
+            transaksi.statusTransaksi?.status == 'pending' ||
+            transaksi.statusTransaksi?.status == 'success')
+        .length;
+    final int stockCount = DummyData.tabungList
+        .where((tabung) => tabung.statusTabung?.statusTabung == 'tersedia')
+        .length;
+    final int customerCount = DummyData.peroranganList.length;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header dipindahkan ke dalam body agar ikut scroll
+            // Header
             Container(
               width: double.infinity,
-              height: headerHeight,
-              padding: EdgeInsets.fromLTRB(16, paddingTop, 16, paddingBottom),
+              padding: EdgeInsets.fromLTRB(16, paddingTop, 16, 16),
               decoration: BoxDecoration(
-                color: primaryBlue,
+                color: AppColors.primaryBlue,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,37 +90,32 @@ class DashboardAdministratorScreen extends StatelessWidget {
                         ),
                         onSelected: (value) {
                           if (value == 'logout') {
-                            // Tampilkan dialog konfirmasi logout
                             Get.defaultDialog(
                               title: 'Konfirmasi',
                               middleText: 'Apakah Anda yakin ingin keluar?',
                               textConfirm: 'Ya',
                               textCancel: 'Tidak',
                               confirmTextColor: Colors.white,
-                              cancelTextColor: Colors.black87,
-                              buttonColor: primaryBlue,
+                              cancelTextColor: AppColors.secondary,
+                              buttonColor: AppColors.secondary,
                               onConfirm: () {
                                 authController.logout();
-                                Get.offAllNamed('/login');
                               },
                               onCancel: () {},
                             );
                           } else if (value == 'notification') {
-                            // Logika untuk menangani opsi Notifikasi
                             Get.snackbar(
                               'Notifikasi',
-                              'Fitur notifikasi sedang dikembangkan atau diarahkan ke halaman notifikasi.',
-                              backgroundColor: primaryBlue,
-                              colorText: Colors.white,
+                              'Fitur notifikasi sedang dikembangkan.',
+                              backgroundColor: AppColors.whiteSemiTransparent,
+                              colorText: Colors.black,
                             );
-                            // Anda bisa menambahkan navigasi ke halaman notifikasi, misalnya:
-                            // Get.toNamed('/notification');
                           }
                         },
                         itemBuilder: (BuildContext context) {
                           return [
                             const PopupMenuItem<String>(
-                              value: 'Notifikasi',
+                              value: 'notification', // Perbaiki value
                               child: Row(
                                 children: [
                                   Icon(
@@ -159,13 +163,14 @@ class DashboardAdministratorScreen extends StatelessWidget {
                   Center(
                     child: Column(
                       children: [
-                        Text(
+                        const Text(
                           'Halo,',
                           style: TextStyle(color: Colors.white, fontSize: 22),
                         ),
                         Text(
-                          '$role - Laris Jaya Gas',
-                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                          '${adminAkun.role} - Laris Jaya Gas',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 16),
                         ),
                         const SizedBox(height: 16),
                         Card(
@@ -183,18 +188,26 @@ class DashboardAdministratorScreen extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '$transactionCount Transaksi Berjalan',
+                                        '$totalTransaksiBerjalan Transaksi Berjalan',
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      Text(namaPengguna,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      Text(phone),
-                                      Text(email),
+                                      Text(
+                                        adminAkun.perorangan?.namaLengkap ??
+                                            'Apriliady Rahman',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        adminAkun.perorangan?.noTelepon ??
+                                            '081355189363',
+                                      ),
+                                      Text(
+                                        adminAkun.email,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -211,7 +224,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
             ),
             // Konten lainnya
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
                   Column(
@@ -238,14 +251,19 @@ class DashboardAdministratorScreen extends StatelessWidget {
                             Icons.swap_horiz,
                             '$transactionCount',
                             const LinearGradient(
-                              colors: [Color(0xFF0172B2), Color(0xFF001848)],
+                              colors: [
+                                AppColors.primaryBlue,
+                                Color(0xFF001848)
+                              ],
                             ),
-                            () {},
+                            () {
+                              Get.toNamed('/administrator/transaksi');
+                            },
                           ),
                           _buildMenuCard(
                             'Riwayat',
                             Icons.history,
-                            '$historyCount',
+                            '',
                             Colors.white,
                             () {},
                           ),
@@ -262,7 +280,9 @@ class DashboardAdministratorScreen extends StatelessWidget {
                       const Text(
                         'Konfirmasi Akun Pelanggan',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Obx(() {
@@ -277,7 +297,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
                                 margin: const EdgeInsets.symmetric(vertical: 8),
                                 child: ListTile(
                                   leading: const Icon(Icons.person_outline),
-                                  title: Text(account['email']),
+                                  title: Text(account['email'] ?? ''),
                                   subtitle:
                                       const Text('Status: Menunggu Konfirmasi'),
                                   trailing: PrimaryButton(
@@ -304,7 +324,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: primaryBlue,
+        selectedItemColor: AppColors.primaryBlue,
         unselectedItemColor: Colors.grey,
         currentIndex: 0,
         items: const [
@@ -365,7 +385,9 @@ class DashboardAdministratorScreen extends StatelessWidget {
             Icon(
               icon,
               size: 32,
-              color: background is LinearGradient ? Colors.white : Colors.blue,
+              color: background is LinearGradient
+                  ? Colors.white
+                  : AppColors.primaryBlue,
             ),
             const SizedBox(height: 12),
             Text(
@@ -379,7 +401,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '$count data',
+              count.isEmpty ? 'Belum ada data' : '$count data',
               style: TextStyle(
                 color:
                     background is LinearGradient ? Colors.white70 : Colors.grey,

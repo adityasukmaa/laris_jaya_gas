@@ -24,14 +24,14 @@ class PrimaryButton extends StatelessWidget {
             ? const Size(
                 100, 40) // Lebar dan tinggi lebih kecil untuk mode kompak
             : const Size(double.infinity, 50), // Lebar penuh untuk mode normal
-        shape: RoundedRectangleBorder(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontSize:
               isCompact ? 14 : 16, // Ukuran font lebih kecil di mode kompak
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.normal,
         ),
       ),
     );

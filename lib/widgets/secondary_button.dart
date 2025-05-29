@@ -19,7 +19,7 @@ class SecondaryButton extends StatelessWidget {
         backgroundColor: Colors.white, // Background putih
         foregroundColor: AppColors.blackText,
         minimumSize: const Size(double.infinity, 50), // Lebar penuh
-        shape: RoundedRectangleBorder(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: const BorderSide(
             color: AppColors.blackText, width: 1), // Border hitam
         elevation: 2, // Bayangan halus

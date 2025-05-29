@@ -43,6 +43,8 @@ dependencies:
   device_info_plus: ^11.3.0
   image: ^4.5.4
   pdf: ^3.11.3
+  json_annotation: ^4.9.0
+  mobile_scanner: ^6.0.10
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +56,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  build_runner: ^2.4.15
+  json_serializable: ^6.9.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

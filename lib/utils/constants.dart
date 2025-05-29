@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primaryBlue = Color(0xFF0288D1); // Biru untuk kepercayaan
+  static const Color primaryBlue = Color(0xFF0172B2); // Biru untuk kepercayaan
   static const Color secondary =
       Color(0xFF001848); // Biru gelap untuk tombol Masuk
   static const Color yellowAccent =

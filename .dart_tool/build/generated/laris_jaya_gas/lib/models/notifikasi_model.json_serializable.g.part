@@ -1,0 +1,22 @@
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+Notifikasi _$NotifikasiFromJson(Map<String, dynamic> json) => Notifikasi(
+      idNotifikasi: json['idNotifikasi'] as String,
+      idTagihan: json['idTagihan'] as String,
+      idTemplate: json['idTemplate'] as String,
+      tanggalTerjadwal: DateTime.parse(json['tanggalTerjadwal'] as String),
+      statusBaca: json['statusBaca'] as bool,
+      waktuDikirim: json['waktuDikirim'] as String,
+    );
+
+Map<String, dynamic> _$NotifikasiToJson(Notifikasi instance) =>
+    <String, dynamic>{
+      'idNotifikasi': instance.idNotifikasi,
+      'idTagihan': instance.idTagihan,
+      'idTemplate': instance.idTemplate,
+      'tanggalTerjadwal': instance.tanggalTerjadwal.toIso8601String(),
+      'statusBaca': instance.statusBaca,
+      'waktuDikirim': instance.waktuDikirim,
+    };

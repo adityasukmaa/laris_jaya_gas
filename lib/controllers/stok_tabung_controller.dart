@@ -1,36 +1,35 @@
 import 'package:get/get.dart';
-import '../models/tabung_model.dart';
-import 'tabung_controller.dart';
+import 'package:laris_jaya_gas/models/tabung_model.dart';
+import '../../utils/dummy_data.dart';
 
 class StokTabungController extends GetxController {
-  final TabungController tabungController = Get.find<TabungController>();
-
-  var filteredTabungList = <Tabung>[].obs;
-
   var selectedJenis = 'Semua'.obs;
   var selectedStatus = 'Semua'.obs;
+  var filteredTabungList = <Tabung>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    filteredTabungList.assignAll(tabungController.tabungList);
+    applyFilter(); // Terapkan filter awal saat inisialisasi
   }
 
   void applyFilter() {
-    var filtered = tabungController.tabungList.toList();
+    var tempList = List<Tabung>.from(DummyData.tabungList);
 
-    if (selectedJenis.value != 'Semua') {
-      filtered = filtered
-          .where((tabung) => tabung.jenisTabung == selectedJenis.value)
+    if (selectedJenis.value.isNotEmpty && selectedJenis.value != 'Semua') {
+      tempList = tempList
+          .where(
+              (tabung) => tabung.jenisTabung?.namaJenis == selectedJenis.value)
           .toList();
     }
 
-    if (selectedStatus.value != 'Semua') {
-      filtered = filtered
-          .where((tabung) => tabung.status.toLowerCase() == selectedStatus.value.toLowerCase())
+    if (selectedStatus.value.isNotEmpty && selectedStatus.value != 'Semua') {
+      tempList = tempList
+          .where((tabung) =>
+              tabung.statusTabung?.statusTabung == selectedStatus.value)
           .toList();
     }
 
-    filteredTabungList.assignAll(filtered);
+    filteredTabungList.value = tempList;
   }
 }

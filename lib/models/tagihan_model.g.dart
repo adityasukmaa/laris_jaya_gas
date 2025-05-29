@@ -1,0 +1,33 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'tagihan_model.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+Tagihan _$TagihanFromJson(Map<String, dynamic> json) => Tagihan(
+      idTagihan: json['idTagihan'] as String,
+      idTransaksi: json['idTransaksi'] as String,
+      jumlahDibayar: (json['jumlahDibayar'] as num).toDouble(),
+      sisa: (json['sisa'] as num).toDouble(),
+      status: json['status'] as String,
+      tanggalBayarTagihan: json['tanggalBayarTagihan'] == null
+          ? null
+          : DateTime.parse(json['tanggalBayarTagihan'] as String),
+      hariKeterlambatan: (json['hariKeterlambatan'] as num).toInt(),
+      periodeKe: (json['periodeKe'] as num).toInt(),
+      keterangan: json['keterangan'] as String,
+    );
+
+Map<String, dynamic> _$TagihanToJson(Tagihan instance) => <String, dynamic>{
+      'idTagihan': instance.idTagihan,
+      'idTransaksi': instance.idTransaksi,
+      'jumlahDibayar': instance.jumlahDibayar,
+      'sisa': instance.sisa,
+      'status': instance.status,
+      'tanggalBayarTagihan': instance.tanggalBayarTagihan?.toIso8601String(),
+      'hariKeterlambatan': instance.hariKeterlambatan,
+      'periodeKe': instance.periodeKe,
+      'keterangan': instance.keterangan,
+    };
