@@ -178,56 +178,6 @@ class DummyData {
     ),
   ];
 
-  // Data Transaksi
-  static final List<Transaksi> transaksiList = [
-    Transaksi(
-      idTransaksi: 'TR001',
-      idAkun: null,
-      idPerorangan: 'P002',
-      idPerusahaan: null,
-      tanggalTransaksi: DateTime.now().subtract(const Duration(days: 5)),
-      waktuTransaksi: '18:36:00',
-      jumlahDibayar: 0,
-      metodePembayaran: 'transfer',
-      idStatusTransaksi: 'STS002',
-      tanggalJatuhTempo: DateTime.now().add(const Duration(days: 25)),
-      perorangan: peroranganList.firstWhere((p) => p.idPerorangan == 'P002'),
-      statusTransaksi: statusTransaksiList
-          .firstWhere((s) => s.idStatusTransaksi == 'STS002'), detailTransaksis: [],
-    ),
-    Transaksi(
-      idTransaksi: 'TR002',
-      idAkun: null,
-      idPerorangan: 'P002',
-      idPerusahaan: null,
-      tanggalTransaksi: DateTime.now().subtract(const Duration(days: 10)),
-      waktuTransaksi: '09:15:00',
-      jumlahDibayar: 100000,
-      metodePembayaran: 'tunai',
-      idStatusTransaksi: 'STS001',
-      tanggalJatuhTempo: DateTime.now().subtract(const Duration(days: 3)),
-      perorangan: peroranganList.firstWhere((p) => p.idPerorangan == 'P002'),
-      statusTransaksi: statusTransaksiList
-          .firstWhere((s) => s.idStatusTransaksi == 'STS001'), detailTransaksis: [],
-    ),
-    Transaksi(
-      idTransaksi: 'TRX001',
-      idAkun: 'AKN001',
-      idPerorangan: null,
-      idPerusahaan: 'PR001',
-      tanggalTransaksi: DateTime(2025, 5, 27),
-      waktuTransaksi: '18:36:00',
-      jumlahDibayar: 500000.0,
-      metodePembayaran: 'transfer',
-      idStatusTransaksi: 'STS001',
-      tanggalJatuhTempo: null,
-      akun: akunList.firstWhere((a) => a.idAkun == 'AKN001'),
-      perusahaan: perusahaanList.firstWhere((p) => p.idPerusahaan == 'PR001'),
-      statusTransaksi: statusTransaksiList
-          .firstWhere((s) => s.idStatusTransaksi == 'STS001'), detailTransaksis: [],
-    ),
-  ];
-
   // Data Detail Transaksi
   static final List<DetailTransaksi> detailTransaksiList = [
     DetailTransaksi(
@@ -265,6 +215,65 @@ class DummyData {
       tabung: tabungList.firstWhere((t) => t.idTabung == 'TBG001'),
       jenisTransaksi:
           jenisTransaksiList.firstWhere((j) => j.idJenisTransaksi == 'JTR002'),
+    ),
+  ];
+
+  // Data Transaksi
+  static final List<Transaksi> transaksiList = [
+    Transaksi(
+      idTransaksi: 'TR001',
+      idAkun: null,
+      idPerorangan: 'P002',
+      idPerusahaan: null,
+      tanggalTransaksi: DateTime.now().subtract(const Duration(days: 5)),
+      waktuTransaksi: '18:36:00',
+      jumlahDibayar: 0,
+      metodePembayaran: 'transfer',
+      idStatusTransaksi: 'STS002',
+      tanggalJatuhTempo: DateTime.now().add(const Duration(days: 25)),
+      perorangan: peroranganList.firstWhere((p) => p.idPerorangan == 'P002'),
+      statusTransaksi: statusTransaksiList
+          .firstWhere((s) => s.idStatusTransaksi == 'STS002'),
+      detailTransaksis: detailTransaksiList
+          .where((detail) => detail.idTransaksi == 'TR001')
+          .toList(),
+    ),
+    Transaksi(
+      idTransaksi: 'TR002',
+      idAkun: null,
+      idPerorangan: 'P002',
+      idPerusahaan: null,
+      tanggalTransaksi: DateTime.now().subtract(const Duration(days: 10)),
+      waktuTransaksi: '09:15:00',
+      jumlahDibayar: 100000,
+      metodePembayaran: 'tunai',
+      idStatusTransaksi: 'STS001',
+      tanggalJatuhTempo: DateTime.now().subtract(const Duration(days: 3)),
+      perorangan: peroranganList.firstWhere((p) => p.idPerorangan == 'P002'),
+      statusTransaksi: statusTransaksiList
+          .firstWhere((s) => s.idStatusTransaksi == 'STS001'),
+      detailTransaksis: detailTransaksiList
+          .where((detail) => detail.idTransaksi == 'TR002')
+          .toList(),
+    ),
+    Transaksi(
+      idTransaksi: 'TRX001',
+      idAkun: 'AKN001',
+      idPerorangan: null,
+      idPerusahaan: 'PR001',
+      tanggalTransaksi: DateTime(2025, 5, 27),
+      waktuTransaksi: '18:36:00',
+      jumlahDibayar: 500000.0,
+      metodePembayaran: 'transfer',
+      idStatusTransaksi: 'STS001',
+      tanggalJatuhTempo: null,
+      akun: akunList.firstWhere((a) => a.idAkun == 'AKN001'),
+      perusahaan: perusahaanList.firstWhere((p) => p.idPerusahaan == 'PR001'),
+      statusTransaksi: statusTransaksiList
+          .firstWhere((s) => s.idStatusTransaksi == 'STS001'),
+      detailTransaksis: detailTransaksiList
+          .where((detail) => detail.idTransaksi == 'TRX001')
+          .toList(),
     ),
   ];
 

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:laris_jaya_gas/models/transaksi_model.dart';
 import 'package:laris_jaya_gas/screens/administrator/detail_tabung_screen.dart';
-import 'package:laris_jaya_gas/screens/administrator/detail_transaksi_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/edit_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_transaksi_screen.dart';
@@ -64,23 +62,24 @@ class AppRoutes {
     ),
     GetPage(name: tambahTabung, page: () => TambahTabungScreen()),
     GetPage(name: transaksiAdministrator, page: () => const TransaksiScreen()),
+    // GetPage(
+    //   name: detailTransaksiAdministrator,
+    //   page: () {
+    //     final Transaksi? transaction = Get.arguments as Transaksi?;
+    //     if (transaction == null) {
+    //       return const Scaffold(
+    //         body: Center(child: Text('Transaksi tidak ditemukan')),
+    //       );
+    //     }
+    //     return DetailTransaksiScreen(transaction: transaction);
+    //   },
+    // ),
     GetPage(
-      name: detailTransaksiAdministrator,
-      page: () {
-        final Transaksi? transaction = Get.arguments as Transaksi?;
-        if (transaction == null) {
-          return const Scaffold(
-            body: Center(child: Text('Transaksi tidak ditemukan')),
-          );
-        }
-        return DetailTransaksiScreen(transaction: transaction);
-      },
-    ),
-    GetPage(name: tambahTransaksiAdministrator, page: () => const TambahTransaksiScreen()),
+        name: tambahTransaksiAdministrator,
+        page: () => const TambahTransaksiScreen()),
 
     /** Routing Pelanggan */
-    GetPage(
-        name: dashboardPelanggan, page: () => const DashboardPelangganScreen()),
+    // GetPage(name: dashboardPelanggan, page: () => const DashboardPelangganScreen()),
     // GetPage(name: ajukanPeminjaman, page: () => const AjukanPeminjamanScreen()),
     GetPage(
       name: unknownRoute,
