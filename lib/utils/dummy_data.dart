@@ -284,6 +284,7 @@ class DummyData {
       idDetailTransaksi: 'DTL001',
       tanggalPinjam: DateTime.now().subtract(const Duration(days: 5)),
       statusPinjam: 'aktif',
+      tanggalKembali: null,
     ),
   ];
 

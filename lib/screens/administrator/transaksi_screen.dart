@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:laris_jaya_gas/controllers/transaksi_controller.dart';
+import 'package:laris_jaya_gas/models/peminjaman_model.dart';
 import 'package:laris_jaya_gas/models/tagihan_model.dart';
 import 'package:laris_jaya_gas/models/transaksi_model.dart';
 import 'package:laris_jaya_gas/services/database_service.dart';
@@ -34,17 +35,19 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
       setState(() {
         _transaksis =
             transaksis.isNotEmpty ? transaksis : DummyData.transaksiList;
-        _controller.filteredTransaksiList.value = _transaksis;
+        _controller.filteredTransaksiList.value =
+            _transaksis.whereType<Transaksi>().toList();
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _transaksis = DummyData.transaksiList;
-        _controller.filteredTransaksiList.value = _transaksis;
+        _controller.filteredTransaksiList.value =
+            _transaksis.whereType<Transaksi>().toList();
         _isLoading = false;
       });
-      Get.snackbar('Error', 'Gagal memuat transaksi: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      // Get.snackbar('Error', 'Gagal memuat transaksi: $e',
+      //     backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
@@ -55,8 +58,8 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
         idTagihan: '',
         idTransaksi: transaksi.idTransaksi,
         jumlahDibayar: 0,
-        sisa: transaksi.detailTransaksis?.isNotEmpty ?? false
-            ? transaksi.detailTransaksis!.first.totalTransaksi ?? 0.0
+        sisa: transaksi.detailTransaksis!.isNotEmpty
+            ? (transaksi.detailTransaksis!.first.totalTransaksi ?? 0.0)
             : 0.0,
         status: 'belum_lunas',
         tanggalBayarTagihan: null,
@@ -108,7 +111,8 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                final angsuran = double.parse(angsuranController.text);
+                final angsuran =
+                    double.tryParse(angsuranController.text) ?? 0.0;
                 if (angsuran > tagihan.sisa) {
                   Get.snackbar(
                     'Error',
@@ -151,14 +155,32 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                 }
 
                 if (newSisa <= 0) {
-                  final peminjaman = DummyData.peminjamanList.firstWhere((p) =>
-                      p.idDetailTransaksi ==
-                      transaksi.detailTransaksis!.first.idDetailTransaksi);
+                  final peminjaman = DummyData.peminjamanList.firstWhere(
+                    (p) =>
+                        p.idDetailTransaksi ==
+                        (transaksi.detailTransaksis!.isNotEmpty
+                            ? transaksi
+                                .detailTransaksis!.first.idDetailTransaksi
+                            : ''),
+                    orElse: () => Peminjaman(
+                      idPeminjaman: '',
+                      idDetailTransaksi: transaksi.detailTransaksis!.isNotEmpty
+                          ? transaksi.detailTransaksis!.first.idDetailTransaksi
+                          : '',
+                      tanggalPinjam: DateTime.now(),
+                      statusPinjam: 'selesai',
+                      tanggalKembali: null,
+                    ),
+                  );
                   peminjaman.statusPinjam = 'selesai';
-                  final tabung = transaksi.detailTransaksis!.first.tabung!;
-                  tabung.idStatusTabung = 'STG001';
-                  tabung.statusTabung = DummyData.statusTabungList
-                      .firstWhere((s) => s.idStatusTabung == 'STG001');
+                  final tabung = transaksi.detailTransaksis!.isNotEmpty
+                      ? transaksi.detailTransaksis!.first.tabung
+                      : null;
+                  if (tabung != null) {
+                    tabung.idStatusTabung = 'STG001';
+                    tabung.statusTabung = DummyData.statusTabungList
+                        .firstWhere((s) => s.idStatusTabung == 'STG001');
+                  }
                 }
 
                 Get.back();
@@ -373,12 +395,13 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                             final transaksi =
                                 _controller.filteredTransaksiList[index];
                             final isPeminjaman =
-                                transaksi.detailTransaksis?.isNotEmpty ?? false
-                                    ? transaksi
-                                            .detailTransaksis!
-                                            .first
-                                            .jenisTransaksi
-                                            ?.namaJenisTransaksi ==
+                                transaksi.detailTransaksis!.isNotEmpty
+                                    ? (transaksi
+                                                .detailTransaksis!
+                                                .first
+                                                .jenisTransaksi
+                                                ?.namaJenisTransaksi ??
+                                            '') ==
                                         'peminjaman'
                                     : false;
                             final tagihan = DummyData.tagihanList.firstWhere(
@@ -387,11 +410,10 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                 idTagihan: '',
                                 idTransaksi: transaksi.idTransaksi,
                                 jumlahDibayar: 0,
-                                sisa: transaksi.detailTransaksis?.isNotEmpty ??
-                                        false
-                                    ? transaksi.detailTransaksis!.first
+                                sisa: transaksi.detailTransaksis!.isNotEmpty
+                                    ? (transaksi.detailTransaksis!.first
                                             .totalTransaksi ??
-                                        0.0
+                                        0.0)
                                     : 0.0,
                                 status: 'belum_lunas',
                                 tanggalBayarTagihan: null,
@@ -462,7 +484,7 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      'Jenis: ${transaksi.detailTransaksis?.isNotEmpty ?? false ? transaksi.detailTransaksis!.first.jenisTransaksi?.namaJenisTransaksi ?? "Unknown" : "Unknown"}',
+                                      'Jenis: ${transaksi.detailTransaksis!.isNotEmpty ? (transaksi.detailTransaksis!.first.jenisTransaksi?.namaJenisTransaksi ?? "Unknown") : "Unknown"}',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey,
@@ -476,12 +498,14 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
-                                            color: transaksi.statusTransaksi
-                                                        ?.status ==
+                                            color: (transaksi.statusTransaksi
+                                                            ?.status ??
+                                                        'Unknown') ==
                                                     'success'
                                                 ? Colors.green
-                                                : transaksi.statusTransaksi
-                                                            ?.status ==
+                                                : (transaksi.statusTransaksi
+                                                                ?.status ??
+                                                            'Unknown') ==
                                                         'pending'
                                                     ? Colors.orange
                                                     : Colors.red,
@@ -494,12 +518,14 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: transaksi.statusTransaksi
-                                                        ?.status ==
+                                            color: (transaksi.statusTransaksi
+                                                            ?.status ??
+                                                        'Unknown') ==
                                                     'success'
                                                 ? Colors.green.withOpacity(0.1)
-                                                : transaksi.statusTransaksi
-                                                            ?.status ==
+                                                : (transaksi.statusTransaksi
+                                                                ?.status ??
+                                                            'Unknown') ==
                                                         'pending'
                                                     ? Colors.orange
                                                         .withOpacity(0.1)
@@ -513,12 +539,14 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                                 "Unknown",
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: transaksi.statusTransaksi
-                                                          ?.status ==
+                                              color: (transaksi.statusTransaksi
+                                                              ?.status ??
+                                                          'Unknown') ==
                                                       'success'
                                                   ? Colors.green
-                                                  : transaksi.statusTransaksi
-                                                              ?.status ==
+                                                  : (transaksi.statusTransaksi
+                                                                  ?.status ??
+                                                              'Unknown') ==
                                                           'pending'
                                                       ? Colors.orange
                                                       : Colors.red,
@@ -538,38 +566,25 @@ class _TransaksiScreenState extends State<TransaksiScreen> {
                                       ),
                                     ],
                                     const SizedBox(height: 8),
-                                    Text(
+                                    const Text(
                                       'Detail Tabung:',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    ...transaksi.detailTransaksis
-                                            ?.map((detail) => Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 4),
-                                                  child: Text(
-                                                    'Tabung: ${detail.tabung?.kodeTabung} (${detail.tabung?.jenisTabung?.namaJenis ?? "Unknown"}) - Rp ${detail.harga.toStringAsFixed(2)}',
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                )) ??
-                                        [
-                                          const Padding(
-                                            padding: EdgeInsets.only(top: 4),
-                                            child: Text(
-                                              'Tidak ada detail tabung',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
+                                    ...transaksi.detailTransaksis!.map(
+                                      (detail) => Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          'Tabung: ${detail.tabung?.kodeTabung ?? "Unknown"} (${detail.tabung?.jenisTabung?.namaJenis ?? "Unknown"}) - Rp ${(detail.harga ?? 0.0).toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey,
                                           ),
-                                        ],
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),

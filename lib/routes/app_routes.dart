@@ -5,7 +5,7 @@ import 'package:laris_jaya_gas/screens/administrator/edit_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_transaksi_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/transaksi_screen.dart';
-import 'package:laris_jaya_gas/screens/pelanggan/dashboard_pelanggan_screen.dart';
+// import 'package:laris_jaya_gas/screens/pelanggan/dashboard_pelanggan_screen.dart';
 import 'package:laris_jaya_gas/screens/splash_screen/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';

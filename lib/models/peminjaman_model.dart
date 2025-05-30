@@ -8,12 +8,14 @@ class Peminjaman {
   final String idDetailTransaksi;
   final DateTime tanggalPinjam;
   late final String statusPinjam;
+  final DateTime? tanggalKembali;
 
   Peminjaman({
     required this.idPeminjaman,
     required this.idDetailTransaksi,
     required this.tanggalPinjam,
     required this.statusPinjam,
+    this.tanggalKembali,
   });
 
   factory Peminjaman.fromJson(Map<String, dynamic> json) =>

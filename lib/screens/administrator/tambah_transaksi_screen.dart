@@ -255,7 +255,7 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
                 'PJM${(DummyData.peminjamanList.length + 1).toString().padLeft(3, '0')}',
             idDetailTransaksi: newDetailTransaksi.idDetailTransaksi,
             tanggalPinjam: DateTime.now(),
-            statusPinjam: 'aktif',
+            statusPinjam: 'aktif', tanggalKembali: null,
           );
           DummyData.peminjamanList.add(newPeminjaman);
         }

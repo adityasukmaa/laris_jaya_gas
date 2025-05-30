@@ -11,6 +11,7 @@ Peminjaman _$PeminjamanFromJson(Map<String, dynamic> json) => Peminjaman(
       idDetailTransaksi: json['idDetailTransaksi'] as String,
       tanggalPinjam: DateTime.parse(json['tanggalPinjam'] as String),
       statusPinjam: json['statusPinjam'] as String,
+      tanggalKembali: null,
     );
 
 Map<String, dynamic> _$PeminjamanToJson(Peminjaman instance) =>

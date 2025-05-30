@@ -28,7 +28,7 @@ class Transaksi {
   Perusahaan? perusahaan;
   @JsonKey(includeFromJson: false, includeToJson: false)
   StatusTransaksi? statusTransaksi;
-  List<DetailTransaksi>? detailTransaksis; // Pastikan properti ini ada
+  List<DetailTransaksi>? detailTransaksis;
 
   Transaksi({
     required this.idTransaksi,
@@ -44,7 +44,8 @@ class Transaksi {
     this.akun,
     this.perorangan,
     this.perusahaan,
-    this.statusTransaksi, required List<DetailTransaksi> detailTransaksis,
+    this.statusTransaksi,
+    this.detailTransaksis,
   });
 
   factory Transaksi.fromJson(Map<String, dynamic> json) =>
