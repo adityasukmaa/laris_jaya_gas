@@ -91,17 +91,71 @@ class DashboardAdministratorScreen extends StatelessWidget {
                         onSelected: (value) {
                           if (value == 'logout') {
                             Get.defaultDialog(
-                              title: 'Konfirmasi',
-                              middleText: 'Apakah Anda yakin ingin keluar?',
-                              textConfirm: 'Ya',
-                              textCancel: 'Tidak',
-                              confirmTextColor: Colors.white,
-                              cancelTextColor: AppColors.secondary,
-                              buttonColor: AppColors.secondary,
-                              onConfirm: () {
-                                authController.logout();
-                              },
-                              onCancel: () {},
+                              title: '',
+                              titlePadding: EdgeInsets.zero,
+                              contentPadding:
+                                  const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                              backgroundColor: Colors.white,
+                              content: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Text(
+                                    'Apakah Anda yakin ingin keluar?',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.secondary,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () => Get.back(),
+                                        style: OutlinedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12, horizontal: 38),
+                                          side: BorderSide(
+                                              color: AppColors.secondary),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16)),
+                                        ),
+                                        child: const Text(
+                                          'Tidak',
+                                          style: TextStyle(
+                                              color: AppColors.secondary,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          authController.logout();
+                                          Get.back();
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.secondary,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12, horizontal: 48),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16)),
+                                        ),
+                                        child: const Text(
+                                          'Ya',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             );
                           } else if (value == 'notification') {
                             Get.snackbar(
@@ -343,6 +397,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
               Get.toNamed('/administrator/dashboard');
               break;
             case 1:
+              Get.toNamed('/administrator/peminjaman');
               break;
             case 2:
               break;

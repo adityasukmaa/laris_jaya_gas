@@ -85,43 +85,45 @@ class DashboardPelangganScreen extends StatelessWidget {
                                   Get.defaultDialog(
                                     title: '',
                                     titlePadding: EdgeInsets.zero,
-                                    contentPadding: const EdgeInsets.all(16),
-                                    backgroundColor: const Color(0xFFE6F0FA),
+                                    contentPadding: const EdgeInsets.fromLTRB(
+                                        16, 16, 16, 16),
+                                    backgroundColor: Colors.white,
                                     content: Column(
-                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisSize: MainAxisSize.max,
                                       children: [
                                         Text(
                                           'Apakah Anda yakin ingin keluar?',
                                           style: TextStyle(
-                                            fontSize: 18,
-                                            color: Colors.blue[900],
-                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: AppColors.secondary,
+                                            fontWeight: FontWeight.normal,
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
-                                        const SizedBox(height: 24),
+                                        const SizedBox(height: 18),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
                                             ElevatedButton(
                                               onPressed: () => Get.back(),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Colors.blue[300],
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
+                                              style: OutlinedButton.styleFrom(
+                                                backgroundColor: Colors.white,
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                        horizontal: 24,
-                                                        vertical: 12),
+                                                        vertical: 12,
+                                                        horizontal: 38),
+                                                side: BorderSide(
+                                                    color: AppColors.secondary),
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16)),
                                               ),
                                               child: const Text(
                                                 'Tidak',
                                                 style: TextStyle(
-                                                    color: Colors.white,
+                                                    color: AppColors.secondary,
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
@@ -134,15 +136,15 @@ class DashboardPelangganScreen extends StatelessWidget {
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor:
-                                                    Colors.blue[700],
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
+                                                    AppColors.secondary,
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                        horizontal: 24,
-                                                        vertical: 12),
+                                                        vertical: 12,
+                                                        horizontal: 48),
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16)),
                                               ),
                                               child: const Text(
                                                 'Ya',
@@ -292,7 +294,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                               Icons.add,
                               '',
                               Colors.white,
-                              () => Get.toNamed('/pelanggan/peminjaman'),
+                              () => Get.toNamed('/pelanggan/ajukan-peminjaman'),
                             ),
                             _buildMenuCard(
                               'Isi Ulang',
@@ -304,8 +306,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                   Color(0xFF001848)
                                 ],
                               ),
-                              () => Get.toNamed(
-                                  AppRoutes.tambahTransaksiAdministrator),
+                              () => Get.toNamed('/pelanggan/ajukan-isi-ulang'),
                             ),
                             _buildMenuCard(
                               'Tagihan',

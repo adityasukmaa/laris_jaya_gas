@@ -6,9 +6,9 @@ part 'tagihan_model.g.dart';
 class Tagihan {
   final String idTagihan;
   final String idTransaksi;
-  final double jumlahDibayar;
-  final double sisa;
-  final String status;
+  double jumlahDibayar;
+  double sisa;
+  String status;
   final DateTime? tanggalBayarTagihan;
   final int hariKeterlambatan;
   final int periodeKe;

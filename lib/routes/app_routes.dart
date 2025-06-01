@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:laris_jaya_gas/screens/administrator/detail_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/detail_transaksi_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/edit_tabung_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/peminjaman_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/qr_scan_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_transaksi_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/transaksi_screen.dart';
+import 'package:laris_jaya_gas/screens/pelanggan/ajukan_isi_ulang_screen.dart';
 import 'package:laris_jaya_gas/screens/pelanggan/ajukan_peminjaman_screen.dart';
 import 'package:laris_jaya_gas/screens/pelanggan/dashboard_pelanggan_screen.dart';
 import 'package:laris_jaya_gas/screens/splash_screen/splash_screen.dart';
@@ -32,10 +34,12 @@ class AppRoutes {
   static const String tambahTransaksiAdministrator =
       '/administrator/tambah-transaksi';
   static const String qrScan = '/administrator/qr-scan';
+  static const String peminjamanAdministrator = '/administrator/peminjaman';
 
   /** Routing Pelanggan */
   static const String dashboardPelanggan = '/pelanggan/dashboard';
   static const String ajukanPeminjaman = '/pelanggan/ajukan-peminjaman';
+  static const String ajukanIsiUlang = '/pelanggan/ajukan-isi-ulang';
   static const String tagihanPelanggan = '/pelanggan/tagihan';
   static const String profilPelanggan = '/pelanggan/profil';
 
@@ -91,10 +95,14 @@ class AppRoutes {
         );
       },
     ),
+    GetPage(
+      name: peminjamanAdministrator,
+      page: () => AdministratorPeminjamanScreen(),
+    ),
 
     /** Routing Pelanggan */
     GetPage(name: dashboardPelanggan, page: () => DashboardPelangganScreen()),
-    // GetPage(name: ajukanPeminjaman, page: () => const AjukanPeminjamanScreen()),
+    GetPage(name: ajukanPeminjaman, page: () => const AjukanPeminjamanScreen()),
     GetPage(
       name: tagihanPelanggan,
       page: () => const Scaffold(
@@ -117,8 +125,9 @@ class AppRoutes {
       ),
     ),
     GetPage(
-      name: '/pelanggan/peminjaman',
+      name: ajukanPeminjaman,
       page: () => const AjukanPeminjamanScreen(),
     ),
+    GetPage(name: ajukanIsiUlang, page: () => const AjukanIsiUlangScreen()),
   ];
 }

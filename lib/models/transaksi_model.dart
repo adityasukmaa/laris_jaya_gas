@@ -16,7 +16,7 @@ class Transaksi {
   final String? idPerusahaan;
   final DateTime tanggalTransaksi;
   final String waktuTransaksi;
-  final double jumlahDibayar;
+  double jumlahDibayar;
   final String metodePembayaran;
   String idStatusTransaksi;
   final DateTime? tanggalJatuhTempo;

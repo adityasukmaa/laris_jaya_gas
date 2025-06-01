@@ -3,19 +3,61 @@ import 'package:laris_jaya_gas/models/transaksi_model.dart';
 import 'package:laris_jaya_gas/utils/dummy_data.dart';
 
 class TransaksiController extends GetxController {
-  var selectedJenisTransaksi = 'Semua'.obs;
-  var selectedStatusTransaksi = 'Semua'.obs;
-  var filteredTransaksiList = <Transaksi>[].obs;
-  var transaksiList = <Transaksi>[].obs;
-  var selectedTransaksi = Rx<Transaksi?>(null);
+  var transaksiList =
+      <Transaksi>[].obs; // Untuk transaksi tertunda (admin view)
+  var selectedTransaksi = Rx<Transaksi?>(null); // Untuk detail transaksi
+  var selectedJenisTransaksi = 'Semua'.obs; // Filter jenis transaksi
+  var selectedStatusTransaksi = 'Semua'.obs; // Filter status transaksi
+  var filteredTransaksiList =
+      <Transaksi>[].obs; // Daftar transaksi yang difilter
 
   @override
   void onInit() {
     super.onInit();
-    // Inisialisasi dengan semua transaksi dari dummy data
-    filteredTransaksiList.value = DummyData.transaksiList;
+    loadTransaksi(); // Muat transaksi tertunda untuk admin
+    filteredTransaksiList.value =
+        DummyData.transaksiList; // Inisialisasi daftar transaksi
+    applyFilter(); // Terapkan filter awal
   }
 
+  // Memuat transaksi tertunda untuk admin
+  void loadTransaksi() {
+    transaksiList.value = DummyData.transaksiList
+        .where((t) => t.idStatusTransaksi == 'STS002')
+        .toList();
+  }
+
+  // Memilih transaksi untuk detail
+  void selectTransaksi(Transaksi transaksi) {
+    selectedTransaksi.value = transaksi;
+  }
+
+  // Memperbarui status transaksi dan tagihan
+  void updateTransaksiStatus(
+      String transaksiId, String statusId, double jumlahDibayar) {
+    final index =
+        DummyData.transaksiList.indexWhere((t) => t.idTransaksi == transaksiId);
+    if (index != -1) {
+      final transaksi = DummyData.transaksiList[index];
+      transaksi.idStatusTransaksi = statusId;
+      transaksi.jumlahDibayar = jumlahDibayar;
+      transaksi.statusTransaksi = DummyData.statusTransaksiList
+          .firstWhere((s) => s.idStatusTransaksi == statusId);
+      DummyData.transaksiList[index] = transaksi;
+
+      // Update tagihan menjadi lunas
+      final tagihan =
+          DummyData.tagihanList.firstWhere((t) => t.idTransaksi == transaksiId);
+      tagihan.jumlahDibayar = jumlahDibayar;
+      tagihan.sisa = 0;
+      tagihan.status = 'lunas';
+
+      loadTransaksi(); // Refresh daftar transaksi tertunda
+      refreshTransaksiList(); // Refresh daftar transaksi yang difilter
+    }
+  }
+
+  // Terapkan filter berdasarkan jenis dan status transaksi
   void applyFilter() {
     List<Transaksi> tempList = List.from(DummyData.transaksiList);
 
@@ -37,7 +79,7 @@ class TransaksiController extends GetxController {
     filteredTransaksiList.value = tempList;
   }
 
-  // Metode untuk menyegarkan data dari DummyData dan menerapkan filter ulang
+  // Menyegarkan data dari DummyData dan menerapkan filter ulang
   void refreshTransaksiList() {
     applyFilter();
   }
@@ -62,37 +104,4 @@ class TransaksiController extends GetxController {
             transaksi.tanggalTransaksi.year == now.year)
         .length;
   }
-
-  // void loadTransaksi() {
-  //   transaksiList.value = DummyData.transaksiList
-  //       .where((t) => t.idStatusTransaksi == 'STS002')
-  //       .toList();
-  // }
-
-  // void selectTransaksi(Transaksi transaksi) {
-  //   selectedTransaksi.value = transaksi;
-  // }
-
-  // void updateTransaksiStatus(
-  //     String transaksiId, String statusId, double jumlahDibayar) {
-  //   final index =
-  //       DummyData.transaksiList.indexWhere((t) => t.idTransaksi == transaksiId);
-  //   if (index != -1) {
-  //     final transaksi = DummyData.transaksiList[index];
-  //     transaksi.idStatusTransaksi = statusId;
-  //     transaksi.jumlahDibayar = jumlahDibayar;
-  //     transaksi.statusTransaksi = DummyData.statusTransaksiList
-  //         .firstWhere((s) => s.idStatusTransaksi == statusId);
-  //     DummyData.transaksiList[index] = transaksi;
-
-  //     // Update tagihan menjadi lunas
-  //     final tagihan =
-  //         DummyData.tagihanList.firstWhere((t) => t.idTransaksi == transaksiId);
-  //     tagihan.jumlahDibayar = jumlahDibayar;
-  //     tagihan.sisa = 0;
-  //     tagihan.status = 'lunas';
-
-  //     loadTransaksi(); // Refresh daftar transaksi
-  //   }
-  // }
 }
