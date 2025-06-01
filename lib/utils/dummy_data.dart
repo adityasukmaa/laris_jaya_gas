@@ -25,13 +25,13 @@ class DummyData {
       password: 'administrator123',
       role: 'administrator',
       statusAktif: true,
-      perorangan: Perorangan(
-        idPerorangan: 'P001',
-        namaLengkap: 'Surendra',
-        nik: '1234567890123456',
-        noTelepon: '081355189363',
-        alamat: 'Jl. Sudirman No. 1',
-      ),
+      // perorangan: Perorangan(
+      //   idPerorangan: 'P001',
+      //   namaLengkap: 'Surendra',
+      //   nik: '1234567890123456',
+      //   noTelepon: '081355189363',
+      //   alamat: 'Jl. Sudirman No. 1',
+      // ),
     ),
     Akun(
       idAkun: 'AKN002',

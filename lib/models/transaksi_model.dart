@@ -18,7 +18,7 @@ class Transaksi {
   final String waktuTransaksi;
   final double jumlahDibayar;
   final String metodePembayaran;
-  final String idStatusTransaksi;
+  String idStatusTransaksi;
   final DateTime? tanggalJatuhTempo;
   @JsonKey(includeFromJson: false, includeToJson: false)
   Akun? akun;

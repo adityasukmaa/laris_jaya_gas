@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:laris_jaya_gas/screens/administrator/detail_tabung_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/detail_transaksi_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/edit_tabung_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/qr_scan_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_transaksi_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/transaksi_screen.dart';
@@ -29,6 +31,7 @@ class AppRoutes {
       '/administrator/detail-transaksi';
   static const String tambahTransaksiAdministrator =
       '/administrator/tambah-transaksi';
+  static const String qrScan = '/administrator/qr-scan';
 
   static const String unknownRoute = '/not-found';
 
@@ -60,8 +63,8 @@ class AppRoutes {
         return EditTabungScreen(kodeTabung: kodeTabung);
       },
     ),
-    GetPage(name: tambahTabung, page: () => TambahTabungScreen()),
     GetPage(name: transaksiAdministrator, page: () => const TransaksiScreen()),
+    GetPage(name: tambahTabung, page: () => TambahTabungScreen()),
     // GetPage(
     //   name: detailTransaksiAdministrator,
     //   page: () {
@@ -77,6 +80,23 @@ class AppRoutes {
     GetPage(
         name: tambahTransaksiAdministrator,
         page: () => const TambahTransaksiScreen()),
+    GetPage(
+        name: detailTransaksiAdministrator,
+        page: () => DetailTransaksiScreen(transaksi: Get.arguments)),
+    GetPage(
+      name: qrScan,
+      page: () {
+        final Map<String, dynamic> args = Get.arguments as Map<String, dynamic>;
+        final Function(Map<String, dynamic>) onTabungSelected =
+            args['onTabungSelected'];
+        final List<Map<String, dynamic>> selectedTabungs =
+            (args['selectedTabungs'] as List<Map<String, dynamic>>?) ?? [];
+        return QRScanScreen(
+          onTabungSelected: onTabungSelected,
+          selectedTabungs: selectedTabungs,
+        );
+      },
+    ),
 
     /** Routing Pelanggan */
     // GetPage(name: dashboardPelanggan, page: () => const DashboardPelangganScreen()),

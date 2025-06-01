@@ -320,7 +320,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Get.snackbar(
           'Sukses',
           'Pendaftaran berhasil. Akun Anda akan aktif setelah dikonfirmasi oleh administrator.',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
         Get.offNamed('/'); // Kembali ke SplashScreen setelah daftar
       }

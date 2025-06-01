@@ -7,17 +7,11 @@ class TransaksiController extends GetxController {
   var selectedStatusTransaksi = 'Semua'.obs;
   var filteredTransaksiList = <Transaksi>[].obs;
 
-  // Tambahkan variabel reaktif untuk total transaksi
-  var _totalTransaksiBerjalan = 0.obs;
-  var _totalTransaksiBulanIni = 0.obs;
-
   @override
   void onInit() {
     super.onInit();
     // Inisialisasi dengan semua transaksi dari dummy data
     filteredTransaksiList.value = DummyData.transaksiList;
-    // Hitung awal untuk total transaksi
-    updateTotals();
   }
 
   void applyFilter() {
@@ -25,11 +19,9 @@ class TransaksiController extends GetxController {
 
     if (selectedJenisTransaksi.value != 'Semua') {
       tempList = tempList.where((transaksi) {
-        return transaksi.detailTransaksis?.isNotEmpty ?? false
-            ? transaksi.detailTransaksis!.first.jenisTransaksi
-                    ?.namaJenisTransaksi ==
-                selectedJenisTransaksi.value
-            : false;
+        return transaksi.detailTransaksis?.firstOrNull?.jenisTransaksi
+                ?.namaJenisTransaksi ==
+            selectedJenisTransaksi.value;
       }).toList();
     }
 
@@ -43,23 +35,29 @@ class TransaksiController extends GetxController {
     filteredTransaksiList.value = tempList;
   }
 
-  // Metode untuk memperbarui total transaksi secara reaktif
-  void updateTotals() {
+  // Metode untuk menyegarkan data dari DummyData dan menerapkan filter ulang
+  void refreshTransaksiList() {
+    applyFilter();
+  }
+
+  // Hitung total transaksi berjalan (status != 'success' atau memiliki tanggalJatuhTempo di masa depan)
+  int get totalTransaksiBerjalan {
     final now = DateTime.now();
-    _totalTransaksiBerjalan.value = DummyData.transaksiList
+    return filteredTransaksiList
         .where((transaksi) =>
             transaksi.statusTransaksi?.status != 'success' ||
             (transaksi.tanggalJatuhTempo != null &&
                 transaksi.tanggalJatuhTempo!.isAfter(now)))
         .length;
-    _totalTransaksiBulanIni.value = DummyData.transaksiList
+  }
+
+  // Hitung total transaksi bulan ini (berdasarkan tanggalTransaksi)
+  int get totalTransaksiBulanIni {
+    final now = DateTime.now();
+    return filteredTransaksiList
         .where((transaksi) =>
             transaksi.tanggalTransaksi.month == now.month &&
             transaksi.tanggalTransaksi.year == now.year)
         .length;
   }
-
-  // Getter reaktif untuk total transaksi
-  int get totalTransaksiBerjalan => _totalTransaksiBerjalan.value;
-  int get totalTransaksiBulanIni => _totalTransaksiBulanIni.value;
 }

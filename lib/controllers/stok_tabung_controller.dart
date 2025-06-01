@@ -32,4 +32,21 @@ class StokTabungController extends GetxController {
 
     filteredTabungList.value = tempList;
   }
+
+  // Metode untuk menyegarkan daftar tabung dari DummyData
+  void refreshTabungList() {
+    applyFilter();
+  }
+
+  // Hitung total tabung berdasarkan status
+  int get totalTabungByStatus {
+    return filteredTabungList.length;
+  }
+
+  // Hitung total tabung berdasarkan jenis
+  int get totalTabungByJenis {
+    return filteredTabungList
+        .where((tabung) => tabung.jenisTabung?.namaJenis == selectedJenis.value)
+        .length;
+  }
 }

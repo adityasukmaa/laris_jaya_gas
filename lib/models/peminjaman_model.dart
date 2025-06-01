@@ -7,8 +7,8 @@ class Peminjaman {
   final String idPeminjaman;
   final String idDetailTransaksi;
   final DateTime tanggalPinjam;
-  late final String statusPinjam;
-  final DateTime? tanggalKembali;
+  String statusPinjam;
+  DateTime? tanggalKembali;
 
   Peminjaman({
     required this.idPeminjaman,
@@ -21,4 +21,4 @@ class Peminjaman {
   factory Peminjaman.fromJson(Map<String, dynamic> json) =>
       _$PeminjamanFromJson(json);
   Map<String, dynamic> toJson() => _$PeminjamanToJson(this);
-}
+}   
