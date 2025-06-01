@@ -392,4 +392,6 @@ class DummyData {
     'transaction_count':
         transaksiList.where((t) => t.idPerorangan == 'P002').length,
   };
+
+  static var transaksi;
 }

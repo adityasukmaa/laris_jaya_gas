@@ -250,11 +250,23 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
 
   void _selectTabungManually() {
     String? selectedTabungId;
+    String? selectedJenisTransaksi;
+
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setStateDialog) {
+            // Log daftar tabung yang akan ditampilkan di dropdown
+            final availableTabungs = DummyData.tabungList
+                .where((tabung) =>
+                    tabung.statusTabung?.statusTabung == 'tersedia' &&
+                    !selectedTabungs.any(
+                        (t) => t['tabung'].kodeTabung == tabung.kodeTabung))
+                .toList();
+            print(
+                'Available tabungs for dropdown: ${availableTabungs.map((t) => t.kodeTabung).toList()}');
+
             return AlertDialog(
               title: const Text('Pilih Tabung Secara Manual'),
               content: Column(
@@ -268,10 +280,7 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
                       ),
                       labelText: 'Pilih Tabung',
                     ),
-                    items: DummyData.tabungList
-                        .where((tabung) =>
-                            tabung.statusTabung?.statusTabung != 'dipinjam')
-                        .map((Tabung tabung) {
+                    items: availableTabungs.map((Tabung tabung) {
                       return DropdownMenuItem<String>(
                         value: tabung.idTabung,
                         child: Text(
@@ -279,13 +288,46 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
                       );
                     }).toList(),
                     onChanged: (value) {
-                      setState(() {
+                      setStateDialog(() {
                         selectedTabungId = value;
+                        selectedJenisTransaksi =
+                            null; // Reset jenis transaksi saat tabung berubah
                       });
                     },
                     validator: (value) {
                       if (value == null) {
                         return 'Tabung harus dipilih';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedJenisTransaksi,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      labelText: 'Jenis Transaksi',
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'peminjaman',
+                        child: const Text('Peminjaman'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'isi ulang',
+                        child: const Text('Isi Ulang'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        selectedJenisTransaksi = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Jenis Transaksi harus dipilih';
                       }
                       return null;
                     },
@@ -299,14 +341,23 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (selectedTabungId != null) {
+                    if (selectedTabungId != null &&
+                        selectedJenisTransaksi != null) {
                       final tabung = DummyData.tabungList.firstWhere(
                         (t) => t.idTabung == selectedTabungId,
                       );
-                      if (!selectedTabungs.any(
+                      if (tabung.statusTabung?.statusTabung != 'tersedia') {
+                        Get.snackbar(
+                          'Peringatan',
+                          'Tabung ${tabung.kodeTabung} tidak tersedia!',
+                          backgroundColor: Colors.orange,
+                          colorText: Colors.white,
+                          duration: const Duration(seconds: 3),
+                        );
+                        return;
+                      }
+                      if (selectedTabungs.any(
                           (t) => t['tabung'].kodeTabung == tabung.kodeTabung)) {
-                        _showInitialTransactionDialog(tabung);
-                      } else {
                         Get.snackbar(
                           'Peringatan',
                           'Tabung ${tabung.kodeTabung} sudah dipilih sebelumnya!',
@@ -314,8 +365,25 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
                           colorText: Colors.white,
                           duration: const Duration(seconds: 3),
                         );
+                      } else {
+                        setState(() {
+                          selectedTabungs.add({
+                            'tabung': tabung,
+                            'jenisTransaksi': selectedJenisTransaksi,
+                          });
+                          print(
+                              'Manually added tabung: ${tabung.kodeTabung}, new list: $selectedTabungs'); // Log setelah tambah manual
+                        });
                       }
                       Get.back();
+                    } else {
+                      Get.snackbar(
+                        'Error',
+                        'Harap pilih tabung dan jenis transaksi!',
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        duration: const Duration(seconds: 3),
+                      );
                     }
                   },
                   child: const Text('Pilih'),

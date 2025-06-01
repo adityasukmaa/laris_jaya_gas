@@ -6,6 +6,8 @@ class TransaksiController extends GetxController {
   var selectedJenisTransaksi = 'Semua'.obs;
   var selectedStatusTransaksi = 'Semua'.obs;
   var filteredTransaksiList = <Transaksi>[].obs;
+  var transaksiList = <Transaksi>[].obs;
+  var selectedTransaksi = Rx<Transaksi?>(null);
 
   @override
   void onInit() {
@@ -60,4 +62,37 @@ class TransaksiController extends GetxController {
             transaksi.tanggalTransaksi.year == now.year)
         .length;
   }
+
+  // void loadTransaksi() {
+  //   transaksiList.value = DummyData.transaksiList
+  //       .where((t) => t.idStatusTransaksi == 'STS002')
+  //       .toList();
+  // }
+
+  // void selectTransaksi(Transaksi transaksi) {
+  //   selectedTransaksi.value = transaksi;
+  // }
+
+  // void updateTransaksiStatus(
+  //     String transaksiId, String statusId, double jumlahDibayar) {
+  //   final index =
+  //       DummyData.transaksiList.indexWhere((t) => t.idTransaksi == transaksiId);
+  //   if (index != -1) {
+  //     final transaksi = DummyData.transaksiList[index];
+  //     transaksi.idStatusTransaksi = statusId;
+  //     transaksi.jumlahDibayar = jumlahDibayar;
+  //     transaksi.statusTransaksi = DummyData.statusTransaksiList
+  //         .firstWhere((s) => s.idStatusTransaksi == statusId);
+  //     DummyData.transaksiList[index] = transaksi;
+
+  //     // Update tagihan menjadi lunas
+  //     final tagihan =
+  //         DummyData.tagihanList.firstWhere((t) => t.idTransaksi == transaksiId);
+  //     tagihan.jumlahDibayar = jumlahDibayar;
+  //     tagihan.sisa = 0;
+  //     tagihan.status = 'lunas';
+
+  //     loadTransaksi(); // Refresh daftar transaksi
+  //   }
+  // }
 }

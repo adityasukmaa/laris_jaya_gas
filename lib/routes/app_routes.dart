@@ -7,7 +7,8 @@ import 'package:laris_jaya_gas/screens/administrator/qr_scan_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_transaksi_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/transaksi_screen.dart';
-// import 'package:laris_jaya_gas/screens/pelanggan/dashboard_pelanggan_screen.dart';
+import 'package:laris_jaya_gas/screens/pelanggan/ajukan_peminjaman_screen.dart';
+import 'package:laris_jaya_gas/screens/pelanggan/dashboard_pelanggan_screen.dart';
 import 'package:laris_jaya_gas/screens/splash_screen/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -18,10 +19,9 @@ class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
-  static const String dashboardAdministrator = '/administrator/dashboard';
-  static const String dashboardPelanggan = '/pelanggan/dashboard';
-  static const String ajukanPeminjaman = '/pelanggan/ajukan-peminjaman';
 
+  /** Routing Administrator */
+  static const String dashboardAdministrator = '/administrator/dashboard';
   static const String stokTabung = '/administrator/stok-tabung';
   static const String detailTabung = '/administrator/detail-tabung';
   static const String tambahTabung = '/administrator/tambah-tabung';
@@ -32,6 +32,12 @@ class AppRoutes {
   static const String tambahTransaksiAdministrator =
       '/administrator/tambah-transaksi';
   static const String qrScan = '/administrator/qr-scan';
+
+  /** Routing Pelanggan */
+  static const String dashboardPelanggan = '/pelanggan/dashboard';
+  static const String ajukanPeminjaman = '/pelanggan/ajukan-peminjaman';
+  static const String tagihanPelanggan = '/pelanggan/tagihan';
+  static const String profilPelanggan = '/pelanggan/profil';
 
   static const String unknownRoute = '/not-found';
 
@@ -65,18 +71,6 @@ class AppRoutes {
     ),
     GetPage(name: transaksiAdministrator, page: () => const TransaksiScreen()),
     GetPage(name: tambahTabung, page: () => TambahTabungScreen()),
-    // GetPage(
-    //   name: detailTransaksiAdministrator,
-    //   page: () {
-    //     final Transaksi? transaction = Get.arguments as Transaksi?;
-    //     if (transaction == null) {
-    //       return const Scaffold(
-    //         body: Center(child: Text('Transaksi tidak ditemukan')),
-    //       );
-    //     }
-    //     return DetailTransaksiScreen(transaction: transaction);
-    //   },
-    // ),
     GetPage(
         name: tambahTransaksiAdministrator,
         page: () => const TambahTransaksiScreen()),
@@ -99,8 +93,14 @@ class AppRoutes {
     ),
 
     /** Routing Pelanggan */
-    // GetPage(name: dashboardPelanggan, page: () => const DashboardPelangganScreen()),
+    GetPage(name: dashboardPelanggan, page: () => DashboardPelangganScreen()),
     // GetPage(name: ajukanPeminjaman, page: () => const AjukanPeminjamanScreen()),
+    GetPage(
+      name: tagihanPelanggan,
+      page: () => const Scaffold(
+        body: Center(child: Text('Halaman Tagihan (Belum Diimplementasikan)')),
+      ),
+    ),
     GetPage(
       name: unknownRoute,
       page: () => Scaffold(
@@ -108,6 +108,17 @@ class AppRoutes {
           child: Text('Halaman tidak ditemukan: ${Get.currentRoute}'),
         ),
       ),
+    ),
+    GetPage(
+      name: '/pelanggan/profil',
+      page: () => const Scaffold(
+        body: Center(
+            child: Text('Halaman Profil Pelanggan (Belum Diimplementasikan)')),
+      ),
+    ),
+    GetPage(
+      name: '/pelanggan/peminjaman',
+      page: () => const AjukanPeminjamanScreen(),
     ),
   ];
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:laris_jaya_gas/controllers/pelanggan_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/tabung_controller.dart';
@@ -10,16 +11,27 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
 
-  // Inisialisasi AuthController
-  Get.put(AuthController());
+  // Inisialisasi AuthController dengan SharedPreferences
+  Get.put(AuthController()..prefs = prefs); 
   Get.put(TabungController());
   Get.put(TransaksiController());
+  Get.put(PelangganController());
 
-  runApp(MyApp());
+  // Tentukan initialRoute berdasarkan status login
+  final initialRoute = prefs.getString('auth_token') != null &&
+          prefs.getString('auth_token')!.isNotEmpty
+      ? prefs.getString('user_role') == 'administrator'
+          ? '/administrator/dashboard'
+          : '/pelanggan/dashboard'
+      : '/';
+
+  runApp(MyApp(initialRoute: initialRoute));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? initialRoute;
+
+  const MyApp({super.key, this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +43,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      initialRoute: initialRoute,
       getPages: AppRoutes.routes,
     );
   }
