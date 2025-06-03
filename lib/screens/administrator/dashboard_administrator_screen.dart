@@ -97,7 +97,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
                                   const EdgeInsets.fromLTRB(16, 16, 16, 16),
                               backgroundColor: Colors.white,
                               content: Column(
-                                mainAxisSize: MainAxisSize.max,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     'Apakah Anda yakin ingin keluar?',

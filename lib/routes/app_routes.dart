@@ -38,6 +38,7 @@ class AppRoutes {
 
   /** Routing Pelanggan */
   static const String dashboardPelanggan = '/pelanggan/dashboard';
+  static const String ajukanTransaksi = '/pelanggan/ajukan-transaksi';
   static const String ajukanPeminjaman = '/pelanggan/ajukan-peminjaman';
   static const String ajukanIsiUlang = '/pelanggan/ajukan-isi-ulang';
   static const String tagihanPelanggan = '/pelanggan/tagihan';
@@ -101,7 +102,10 @@ class AppRoutes {
     ),
 
     /** Routing Pelanggan */
-    GetPage(name: dashboardPelanggan, page: () => DashboardPelangganScreen()),
+    GetPage(
+      name: dashboardPelanggan,
+      page: () => DashboardPelangganScreen(),
+    ),
     GetPage(name: ajukanPeminjaman, page: () => const AjukanPeminjamanScreen()),
     GetPage(
       name: tagihanPelanggan,

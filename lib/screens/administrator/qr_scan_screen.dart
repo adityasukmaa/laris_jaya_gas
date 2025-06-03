@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:laris_jaya_gas/models/tabung_model.dart';
-import 'package:laris_jaya_gas/utils/dummy_data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/tabung_model.dart';
+import '../../services/api_service.dart';
 
 class QRScanScreen extends StatefulWidget {
   final Function(Map<String, dynamic>) onTabungSelected;
@@ -25,6 +26,15 @@ class _QRScanScreenState extends State<QRScanScreen> {
     facing: CameraFacing.back,
     torchEnabled: false,
   );
+  late ApiService apiService;
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      apiService = ApiService(prefs);
+    });
+  }
 
   @override
   void dispose() {
@@ -35,81 +45,39 @@ class _QRScanScreenState extends State<QRScanScreen> {
 
   void _onDetect(BarcodeCapture barcodeCapture) async {
     final String? kodeTabung = barcodeCapture.barcodes.firstOrNull?.rawValue;
-    print('QR Code detected: $kodeTabung'); // Log deteksi QR code
-
     if (kodeTabung != null) {
-      final tabung = DummyData.tabungList.firstWhere(
-        (t) => t.kodeTabung == kodeTabung,
-        orElse: () => Tabung(
-          idTabung: '',
-          kodeTabung: '',
-          idJenisTabung: '',
-          idStatusTabung: '',
-        ),
-      );
-
-      print('Tabung found: ${tabung.kodeTabung}'); // Log tabung ditemukan
-
-      if (tabung.idTabung!.isEmpty) {
-        print(
-            'Tabung not found in DummyData for kode: $kodeTabung'); // Log debugging
-        Get.snackbar(
-          'Error',
-          'Kode tabung tidak ditemukan!',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
-        await Future.delayed(
-            const Duration(milliseconds: 500)); // Tunggu render
+      final tabung = await apiService.getTabung(kodeTabung);
+      if (tabung == null) {
+        Get.snackbar('Error', 'Kode tabung tidak ditemukan!',
+            backgroundColor: Colors.red, colorText: Colors.white);
+        await Future.delayed(const Duration(milliseconds: 500));
         Get.back();
         return;
       }
 
       if (tabung.statusTabung?.statusTabung == 'dipinjam') {
-        print('Tabung $kodeTabung is currently borrowed'); // Log debugging
         Get.snackbar(
-          'Peringatan',
-          'Tabung ${tabung.kodeTabung} sedang dipinjam dan tidak dapat ditambahkan!',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
-        await Future.delayed(
-            const Duration(milliseconds: 500)); // Tunggu render
+            'Peringatan', 'Tabung ${tabung.kodeTabung} sedang dipinjam!',
+            backgroundColor: Colors.orange, colorText: Colors.white);
+        await Future.delayed(const Duration(milliseconds: 500));
         Get.back();
         return;
       }
 
       if (widget.selectedTabungs
           .any((t) => t['tabung'].kodeTabung == kodeTabung)) {
-        print('Tabung $kodeTabung already selected'); // Log debugging
-        Get.snackbar(
-          'Peringatan',
-          'Tabung ${tabung.kodeTabung} sudah dipilih sebelumnya!',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
-        await Future.delayed(
-            const Duration(milliseconds: 500)); // Tunggu render
+        Get.snackbar('Peringatan', 'Tabung ${tabung.kodeTabung} sudah dipilih!',
+            backgroundColor: Colors.orange, colorText: Colors.white);
+        await Future.delayed(const Duration(milliseconds: 500));
         Get.back();
         return;
       }
 
-      print(
-          'Showing transaction dialog for tabung: ${tabung.kodeTabung}'); // Log sebelum dialog
       await _showInitialTransactionDialog(tabung);
     } else {
-      print('No QR code detected'); // Log jika QR code tidak terdeteksi
-      Get.snackbar(
-        'Error',
-        'Tidak ada QR code yang terdeteksi!',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
-      await Future.delayed(const Duration(milliseconds: 500)); // Tunggu render
+      Get.snackbar('Error', 'Tidak ada QR code yang terdeteksi!',
+          backgroundColor: Colors.red, colorText: Colors.white);
+      await Future.delayed(const Duration(milliseconds: 500));
       Get.back();
     }
   }
@@ -137,59 +105,39 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     ),
                     items: [
                       DropdownMenuItem(
-                        value: 'peminjaman',
-                        child: const Text('Peminjaman'),
-                      ),
+                          value: 'peminjaman', child: Text('Peminjaman')),
                       DropdownMenuItem(
-                        value: 'isi ulang',
-                        child: const Text('Isi Ulang'),
-                      ),
+                          value: 'isi ulang', child: Text('Isi Ulang')),
                     ],
                     onChanged: (value) {
                       setState(() {
                         selectedJenisTransaksi = value;
                       });
                     },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Jenis Transaksi harus dipilih';
-                      }
-                      return null;
-                    },
+                    validator: (value) =>
+                        value == null ? 'Jenis Transaksi harus dipilih' : null,
                   ),
                 ],
               ),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    print('Dialog canceled'); // Log jika dialog dibatalkan
-                    Get.back();
-                  },
-                  child: const Text('Batal'),
+                  onPressed: () => Get.back(),
+                  child: Text('Batal'),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     if (selectedJenisTransaksi != null) {
-                      print(
-                          'Tabung selected: ${tabung.kodeTabung} with type $selectedJenisTransaksi'); // Log tabung dipilih
                       widget.onTabungSelected({
                         'tabung': tabung,
                         'jenisTransaksi': selectedJenisTransaksi,
                       });
                       Get.back();
                     } else {
-                      print(
-                          'Jenis Transaksi not selected'); // Log jika jenis transaksi tidak dipilih
-                      Get.snackbar(
-                        'Error',
-                        'Harap pilih jenis transaksi!',
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                        duration: const Duration(seconds: 3),
-                      );
+                      Get.snackbar('Error', 'Harap pilih jenis transaksi!',
+                          backgroundColor: Colors.red, colorText: Colors.white);
                     }
                   },
-                  child: const Text('Pilih'),
+                  child: Text('Pilih'),
                 ),
               ],
             );
@@ -198,9 +146,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
       },
     );
 
-    print('Stopping scanner after dialog'); // Log setelah dialog
     await scannerController.stop();
-    print('Navigating back to TambahTransaksiScreen'); // Log navigasi kembali
     Get.back();
   }
 
@@ -227,9 +173,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
             top: 50,
             left: 16,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () async {
-                print('Back button pressed'); // Log tombol kembali
                 await scannerController.stop();
                 Get.back();
               },
@@ -239,11 +184,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
             top: 50,
             right: 16,
             child: IconButton(
-              icon: const Icon(Icons.flash_on, color: Colors.white),
-              onPressed: () {
-                print('Toggling torch'); // Log tombol obor
-                scannerController.toggleTorch();
-              },
+              icon: Icon(Icons.flash_on, color: Colors.white),
+              onPressed: () => scannerController.toggleTorch(),
             ),
           ),
         ],

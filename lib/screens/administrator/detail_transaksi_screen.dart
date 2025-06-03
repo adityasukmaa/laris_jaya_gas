@@ -197,8 +197,8 @@ class DetailTransaksiScreen extends StatelessWidget {
 
                   Get.back();
                   Get.back();
-                  _controller
-                      .refreshTransaksiList(); // Perbarui data melalui controller
+                  // _controller
+                  //     .refreshTransaksiList(); // Perbarui data melalui controller
                   Get.snackbar(
                     'Sukses',
                     'Pembayaran angsuran berhasil dicatat',
@@ -306,8 +306,8 @@ class DetailTransaksiScreen extends StatelessWidget {
 
                         Get.back();
                         Get.back();
-                        _controller
-                            .refreshTransaksiList(); // Perbarui data melalui controller
+                        // _controller
+                        //     .refreshTransaksiList(); // Perbarui data melalui controller
                         Get.snackbar(
                           'Sukses',
                           'Permintaan pengisian ulang tabung ${tabung.kodeTabung} telah dicatat. Silakan bayar tagihan.',

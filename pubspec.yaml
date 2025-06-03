@@ -45,6 +45,8 @@ dependencies:
   pdf: ^3.11.3
   json_annotation: ^4.9.0
   mobile_scanner: ^6.0.10
+  flutter_local_notifications: ^19.2.1
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:

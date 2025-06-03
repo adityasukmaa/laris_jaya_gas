@@ -19,7 +19,9 @@ Transaksi _$TransaksiFromJson(Map<String, dynamic> json) => Transaksi(
       tanggalJatuhTempo: json['tanggalJatuhTempo'] == null
           ? null
           : DateTime.parse(json['tanggalJatuhTempo'] as String),
-      detailTransaksis: [],
+      detailTransaksis: (json['detailTransaksis'] as List<dynamic>?)
+          ?.map((e) => DetailTransaksi.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$TransaksiToJson(Transaksi instance) => <String, dynamic>{
@@ -33,4 +35,5 @@ Map<String, dynamic> _$TransaksiToJson(Transaksi instance) => <String, dynamic>{
       'metodePembayaran': instance.metodePembayaran,
       'idStatusTransaksi': instance.idStatusTransaksi,
       'tanggalJatuhTempo': instance.tanggalJatuhTempo?.toIso8601String(),
+      'detailTransaksis': instance.detailTransaksis,
     };

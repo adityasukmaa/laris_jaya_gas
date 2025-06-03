@@ -1,107 +1,77 @@
 import 'package:get/get.dart';
-import 'package:laris_jaya_gas/models/transaksi_model.dart';
-import 'package:laris_jaya_gas/utils/dummy_data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/transaksi_model.dart';
+import '../services/api_service.dart';
 
 class TransaksiController extends GetxController {
-  var transaksiList =
-      <Transaksi>[].obs; // Untuk transaksi tertunda (admin view)
-  var selectedTransaksi = Rx<Transaksi?>(null); // Untuk detail transaksi
-  var selectedJenisTransaksi = 'Semua'.obs; // Filter jenis transaksi
-  var selectedStatusTransaksi = 'Semua'.obs; // Filter status transaksi
-  var filteredTransaksiList =
-      <Transaksi>[].obs; // Daftar transaksi yang difilter
+  var transaksiList = <Transaksi>[].obs;
+  var selectedTransaksi = Rx<Transaksi?>(null);
+  var selectedJenisTransaksi = 'Semua'.obs;
+  var selectedStatusTransaksi = 'Semua'.obs;
+  var filteredTransaksiList = <Transaksi>[].obs;
+  late ApiService apiService;
+  late SharedPreferences prefs;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    loadTransaksi(); // Muat transaksi tertunda untuk admin
-    filteredTransaksiList.value =
-        DummyData.transaksiList; // Inisialisasi daftar transaksi
-    applyFilter(); // Terapkan filter awal
+    prefs = await SharedPreferences.getInstance();
+    apiService = ApiService(prefs);
+    await loadTransaksi();
+    applyFilter();
   }
 
-  // Memuat transaksi tertunda untuk admin
-  void loadTransaksi() {
-    transaksiList.value = DummyData.transaksiList
-        .where((t) => t.idStatusTransaksi == 'STS002')
-        .toList();
+  Future<void> loadTransaksi() async {
+    final akunIdString = prefs.getString('akun_id') ?? '';
+    if (akunIdString.isEmpty) return;
+    try {
+      final akunId = int.parse(akunIdString);
+      transaksiList.value = await apiService.getTransaksis(akunId);
+      filteredTransaksiList.value = transaksiList;
+    } catch (e) {
+      print('Error parsing akun_id or fetching transaksis: $e');
+    }
   }
 
-  // Memilih transaksi untuk detail
   void selectTransaksi(Transaksi transaksi) {
     selectedTransaksi.value = transaksi;
   }
 
-  // Memperbarui status transaksi dan tagihan
-  void updateTransaksiStatus(
-      String transaksiId, String statusId, double jumlahDibayar) {
-    final index =
-        DummyData.transaksiList.indexWhere((t) => t.idTransaksi == transaksiId);
-    if (index != -1) {
-      final transaksi = DummyData.transaksiList[index];
-      transaksi.idStatusTransaksi = statusId;
-      transaksi.jumlahDibayar = jumlahDibayar;
-      transaksi.statusTransaksi = DummyData.statusTransaksiList
-          .firstWhere((s) => s.idStatusTransaksi == statusId);
-      DummyData.transaksiList[index] = transaksi;
-
-      // Update tagihan menjadi lunas
-      final tagihan =
-          DummyData.tagihanList.firstWhere((t) => t.idTransaksi == transaksiId);
-      tagihan.jumlahDibayar = jumlahDibayar;
-      tagihan.sisa = 0;
-      tagihan.status = 'lunas';
-
-      loadTransaksi(); // Refresh daftar transaksi tertunda
-      refreshTransaksiList(); // Refresh daftar transaksi yang difilter
-    }
+  Future<void> updateTransaksiStatus(String transaksiId, String statusId, double jumlahDibayar) async {
+    // Implementasi update status via API
+    await loadTransaksi();
+    applyFilter();
   }
 
-  // Terapkan filter berdasarkan jenis dan status transaksi
   void applyFilter() {
-    List<Transaksi> tempList = List.from(DummyData.transaksiList);
+    List<Transaksi> tempList = List.from(transaksiList);
 
     if (selectedJenisTransaksi.value != 'Semua') {
       tempList = tempList.where((transaksi) {
-        return transaksi.detailTransaksis?.firstOrNull?.jenisTransaksi
-                ?.namaJenisTransaksi ==
-            selectedJenisTransaksi.value;
+        return transaksi.detailTransaksis?.firstOrNull?.jenisTransaksi?.namaJenisTransaksi == selectedJenisTransaksi.value;
       }).toList();
     }
 
     if (selectedStatusTransaksi.value != 'Semua') {
       tempList = tempList.where((transaksi) {
-        return transaksi.statusTransaksi?.status ==
-            selectedStatusTransaksi.value;
+        return transaksi.statusTransaksi?.status == selectedStatusTransaksi.value;
       }).toList();
     }
 
     filteredTransaksiList.value = tempList;
   }
 
-  // Menyegarkan data dari DummyData dan menerapkan filter ulang
-  void refreshTransaksiList() {
-    applyFilter();
-  }
-
-  // Hitung total transaksi berjalan (status != 'success' atau memiliki tanggalJatuhTempo di masa depan)
   int get totalTransaksiBerjalan {
     final now = DateTime.now();
-    return filteredTransaksiList
-        .where((transaksi) =>
-            transaksi.statusTransaksi?.status != 'success' ||
-            (transaksi.tanggalJatuhTempo != null &&
-                transaksi.tanggalJatuhTempo!.isAfter(now)))
-        .length;
+    return filteredTransaksiList.where((transaksi) =>
+        transaksi.statusTransaksi?.status != 'success' ||
+        (transaksi.tanggalJatuhTempo != null && transaksi.tanggalJatuhTempo!.isAfter(now))).length;
   }
 
-  // Hitung total transaksi bulan ini (berdasarkan tanggalTransaksi)
   int get totalTransaksiBulanIni {
     final now = DateTime.now();
-    return filteredTransaksiList
-        .where((transaksi) =>
-            transaksi.tanggalTransaksi.month == now.month &&
-            transaksi.tanggalTransaksi.year == now.year)
-        .length;
+    return filteredTransaksiList.where((transaksi) =>
+        transaksi.tanggalTransaksi.month == now.month &&
+        transaksi.tanggalTransaksi.year == now.year).length;
   }
 }

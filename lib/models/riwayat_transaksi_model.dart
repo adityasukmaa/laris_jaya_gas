@@ -6,15 +6,15 @@ part 'riwayat_transaksi_model.g.dart';
 class RiwayatTransaksi {
   final String idRiwayatTransaksi;
   final String idTransaksi;
-  final String idAkun;
-  final String idPerorangan;
-  final String idPerusahaan;
+  final String? idAkun;
+  final String? idPerorangan;
+  final String? idPerusahaan;
   final DateTime tanggalTransaksi;
   final double totalTransaksi;
   final double jumlahDibayar;
   final String metodePembayaran;
   final DateTime? tanggalJatuhTempo;
-  final DateTime tanggalSelesai;
+  final DateTime? tanggalSelesai;
   final String statusAkhir;
   final double totalPembayaran;
   final double denda;
@@ -24,22 +24,23 @@ class RiwayatTransaksi {
   RiwayatTransaksi({
     required this.idRiwayatTransaksi,
     required this.idTransaksi,
-    required this.idAkun,
-    required this.idPerorangan,
-    required this.idPerusahaan,
+    this.idAkun,
+    this.idPerorangan,
+    this.idPerusahaan,
     required this.tanggalTransaksi,
     required this.totalTransaksi,
     required this.jumlahDibayar,
     required this.metodePembayaran,
     this.tanggalJatuhTempo,
-    required this.tanggalSelesai,
-    this.statusAkhir = 'success',
+    this.tanggalSelesai,
+    required this.statusAkhir,
     required this.totalPembayaran,
     required this.denda,
     this.durasiPeminjaman,
     required this.keterangan,
   });
 
-  factory RiwayatTransaksi.fromJson(Map<String, dynamic> json) => _$RiwayatTransaksiFromJson(json);
+  factory RiwayatTransaksi.fromJson(Map<String, dynamic> json) =>
+      _$RiwayatTransaksiFromJson(json);
   Map<String, dynamic> toJson() => _$RiwayatTransaksiToJson(this);
 }

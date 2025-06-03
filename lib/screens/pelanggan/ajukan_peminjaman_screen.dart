@@ -21,8 +21,7 @@ class AjukanPeminjamanScreen extends StatefulWidget {
 
 class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
   final AuthController authController = Get.find<AuthController>();
-  final RxString selectedJenisTabung =
-      RxString(''); // Default kosong, bukan nullable
+  final RxString selectedJenisTabung = RxString('');
   int jumlahTabung = 1;
   String metodePembayaran = 'Transfer';
   bool isAngsuran = false;
@@ -55,7 +54,7 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
   }
 
   void submitPeminjaman() {
-    if (authController.userId.value.isEmpty) {
+    if (authController.akunId.value.isEmpty) {
       Get.snackbar(
           'Error', 'User tidak terautentikasi. Silakan login kembali.');
       Get.offAllNamed(AppRoutes.login);
@@ -73,8 +72,16 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
           'PIN${DummyData.peminjamanList.length + 1}'.padLeft(6, '0');
 
       // Ambil data jenis tabung dan harga
-      final selectedJenisTabungData = DummyData.jenisTabungList
-          .firstWhere((j) => j.idJenisTabung == selectedJenisTabung.value);
+      JenisTabung? selectedJenisTabungData;
+      try {
+        selectedJenisTabungData = DummyData.jenisTabungList.firstWhere(
+          (j) => j.idJenisTabung == selectedJenisTabung.value,
+          orElse: () => throw StateError('Jenis tabung tidak ditemukan'),
+        );
+      } catch (e) {
+        Get.snackbar('Error', 'Jenis tabung tidak ditemukan.');
+        return;
+      }
       final harga = selectedJenisTabungData.harga;
       final totalTransaksi = harga * jumlahTabung;
 
@@ -89,10 +96,34 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
         return;
       }
 
+      // Validasi akun
+      dynamic akun;
+      try {
+        akun = DummyData.akunList.firstWhere(
+          (a) => a.idAkun == authController.akunId.value,
+          orElse: () => throw StateError('Akun tidak ditemukan'),
+        );
+      } catch (e) {
+        Get.snackbar('Error', 'Akun pengguna tidak ditemukan.');
+        return;
+      }
+
+      // Validasi status transaksi
+      dynamic statusTransaksi;
+      try {
+        statusTransaksi = DummyData.statusTransaksiList.firstWhere(
+          (s) => s.idStatusTransaksi == 'STS002',
+          orElse: () => throw StateError('Status transaksi tidak ditemukan'),
+        );
+      } catch (e) {
+        Get.snackbar('Error', 'Status transaksi tidak ditemukan.');
+        return;
+      }
+
       // Tambah transaksi ke transaksiList
       final transaksi = Transaksi(
         idTransaksi: transaksiId,
-        idAkun: authController.userId.value,
+        idAkun: authController.akunId.value,
         idPerorangan: null,
         idPerusahaan: null,
         tanggalTransaksi: DateTime.now(),
@@ -101,13 +132,35 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
         metodePembayaran: metodePembayaran,
         idStatusTransaksi: 'STS002', // Pending
         tanggalJatuhTempo: DateTime.now().add(const Duration(days: 30)),
-        akun: DummyData.akunList
-            .firstWhere((a) => a.idAkun == authController.userId.value),
-        statusTransaksi: DummyData.statusTransaksiList
-            .firstWhere((s) => s.idStatusTransaksi == 'STS002'),
+        akun: akun,
+        statusTransaksi: statusTransaksi,
         detailTransaksis: [],
       );
       DummyData.transaksiList.add(transaksi);
+
+      // Validasi jenis transaksi
+      dynamic jenisTransaksi;
+      try {
+        jenisTransaksi = DummyData.jenisTransaksiList.firstWhere(
+          (j) => j.idJenisTransaksi == 'JTR001',
+          orElse: () => throw StateError('Jenis transaksi tidak ditemukan'),
+        );
+      } catch (e) {
+        Get.snackbar('Error', 'Jenis transaksi tidak ditemukan.');
+        return;
+      }
+
+      // Validasi status tabung
+      dynamic statusTabung;
+      try {
+        statusTabung = DummyData.statusTabungList.firstWhere(
+          (s) => s.idStatusTabung == 'STG002',
+          orElse: () => throw StateError('Status tabung tidak ditemukan'),
+        );
+      } catch (e) {
+        Get.snackbar('Error', 'Status tabung tidak ditemukan.');
+        return;
+      }
 
       // Tambah detail transaksi untuk setiap tabung
       final detailTransaksis = <DetailTransaksi>[];
@@ -121,11 +174,10 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
           idTabung: tabung.idTabung!,
           idJenisTransaksi: 'JTR001', // Peminjaman
           harga: harga,
-          totalTransaksi: harga, // Harga per tabung
+          totalTransaksi: harga,
           batasWaktuPeminjaman: DateTime.now().add(const Duration(days: 30)),
           tabung: tabung,
-          jenisTransaksi: DummyData.jenisTransaksiList
-              .firstWhere((j) => j.idJenisTransaksi == 'JTR001'),
+          jenisTransaksi: jenisTransaksi,
         );
         DummyData.detailTransaksiList.add(detailTransaksi);
         detailTransaksis.add(detailTransaksi);
@@ -139,8 +191,7 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
           idJenisTabung: tabung.idJenisTabung,
           idStatusTabung: 'STG002', // Dipinjam
           jenisTabung: tabung.jenisTabung,
-          statusTabung: DummyData.statusTabungList
-              .firstWhere((s) => s.idStatusTabung == 'STG002'),
+          statusTabung: statusTabung,
         );
       }
 
@@ -158,20 +209,20 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
         ),
       );
 
-      // Simulasi data Midtrans untuk angsuran
-      String? midtransOrderId;
-      String midtransPaymentUrl =
-          ''; // Default kosong untuk menghindari String?
-      if (metodePembayaran == 'Transfer') {
-        // Simulasi pembuatan transaksi di Midtrans
-        midtransOrderId =
-            'ORDER-$transaksiId-${DateTime.now().millisecondsSinceEpoch}';
-        midtransPaymentUrl =
-            'https://app.sandbox.midtrans.com/snap/v1/transactions/$midtransOrderId';
+      // Validasi template notifikasi
+      dynamic notifikasiTemplate;
+      try {
+        notifikasiTemplate = DummyData.notifikasiTemplateList.firstWhere(
+          (t) => t.idTemplate == 'TMP001',
+          orElse: () => throw StateError('Template notifikasi tidak ditemukan'),
+        );
+      } catch (e) {
+        Get.snackbar('Error', 'Template notifikasi tidak ditemukan.');
+        return;
       }
 
-      // Tambah tagihan untuk setiap angsuran
-      if (isAngsuran) {
+      // Tambah tagihan untuk setiap angsuran (jika tunai dengan angsuran)
+      if (metodePembayaran == 'Tunai' && isAngsuran) {
         final angsuranPerBulan = totalTransaksi / jumlahAngsuran;
         for (int i = 1; i <= jumlahAngsuran; i++) {
           final tagihanId =
@@ -186,8 +237,7 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
               tanggalBayarTagihan: null,
               hariKeterlambatan: 0,
               periodeKe: i,
-              keterangan:
-                  'Angsuran ke-$i | Midtrans Order ID: ${midtransOrderId ?? "N/A"}',
+              keterangan: 'Angsuran ke-$i | Pembayaran Tunai',
             ),
           );
 
@@ -195,7 +245,7 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
           final notifikasiId =
               'NOT${DummyData.notifikasiList.length + 1}'.padLeft(6, '0');
           final tanggalJatuhTempoAngsuran =
-              DateTime.now().add(Duration(days: 10 * i));
+              DateTime.now().add(Duration(days: 30 * i));
           DummyData.notifikasiList.add(
             Notifikasi(
               idNotifikasi: notifikasiId,
@@ -205,12 +255,12 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
                   tanggalJatuhTempoAngsuran.subtract(const Duration(days: 3)),
               statusBaca: false,
               waktuDikirim: '09:00:00',
-              template: DummyData.notifikasiTemplateList
-                  .firstWhere((t) => t.idTemplate == 'TMP001'),
+              template: notifikasiTemplate,
             ),
           );
         }
       } else {
+        // Pembayaran tunai tanpa angsuran atau transfer
         final tagihanId =
             'TAG${DummyData.tagihanList.length + 1}'.padLeft(6, '0');
         DummyData.tagihanList.add(
@@ -223,8 +273,9 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
             tanggalBayarTagihan: null,
             hariKeterlambatan: 0,
             periodeKe: 0,
-            keterangan:
-                'Pembayaran penuh | Midtrans Order ID: ${midtransOrderId ?? "N/A"}',
+            keterangan: metodePembayaran == 'Tunai'
+                ? 'Pembayaran penuh | Tunai'
+                : 'Pembayaran penuh | Transfer',
           ),
         );
 
@@ -239,14 +290,18 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
             tanggalTerjadwal: DateTime.now().add(const Duration(days: 27)),
             statusBaca: false,
             waktuDikirim: '09:00:00',
-            template: DummyData.notifikasiTemplateList
-                .firstWhere((t) => t.idTemplate == 'TMP001'),
+            template: notifikasiTemplate,
           ),
         );
       }
 
-      // Redirect ke halaman pembayaran Midtrans (simulasi)
-      if (metodePembayaran == 'Transfer' && midtransPaymentUrl.isNotEmpty) {
+      // Redirect ke halaman pembayaran atau dashboard
+      if (metodePembayaran == 'Transfer') {
+        // Simulasi data Midtrans
+        final midtransOrderId =
+            'ORDER-$transaksiId-${DateTime.now().millisecondsSinceEpoch}';
+        final midtransPaymentUrl =
+            'https://app.sandbox.midtrans.com/snap/v1/transactions/$midtransOrderId';
         Get.snackbar(
           'Sukses',
           'Pengajuan peminjaman berhasil. Silakan lakukan pembayaran.',
@@ -270,7 +325,9 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ajukan Peminjaman'),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Ajukan Peminjaman',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primaryBlue,
       ),
       body: Padding(
@@ -302,8 +359,7 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
                     if (value != null) {
                       selectedJenisTabung.value = value;
                       setState(() {
-                        jumlahTabung =
-                            1; // Reset jumlah tabung saat jenis berubah
+                        jumlahTabung = 1;
                       });
                     }
                   },
@@ -328,9 +384,8 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Masukkan jumlah tabung';
                     }
-                    final jumlah =
-                        int.parse(value); // Safe karena sudah divalidasi kosong
-                    if (jumlah <= 0) {
+                    final jumlah = int.tryParse(value);
+                    if (jumlah == null || jumlah <= 0) {
                       return 'Masukkan angka yang valid';
                     }
                     if (selectedJenisTabung.value.isNotEmpty) {
@@ -363,6 +418,10 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
                     if (value != null) {
                       setState(() {
                         metodePembayaran = value;
+                        if (value == 'Tunai') {
+                          isAngsuran = false; // Reset angsuran untuk tunai
+                          nomorRekening = null; // Reset nomor rekening
+                        }
                       });
                     }
                   },
@@ -403,8 +462,8 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Masukkan jumlah angsuran';
                         }
-                        if (int.tryParse(value) == null ||
-                            int.parse(value) <= 0) {
+                        final jumlah = int.tryParse(value);
+                        if (jumlah == null || jumlah <= 0) {
                           return 'Masukkan angka yang valid';
                         }
                         return null;
@@ -436,6 +495,47 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
                       },
                     ),
                   ],
+                ] else ...[
+                  CheckboxListTile(
+                    title: const Text('Bayar dengan angsuran'),
+                    value: isAngsuran,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          isAngsuran = value;
+                        });
+                      }
+                    },
+                  ),
+                  if (isAngsuran) ...[
+                    const Text(
+                      'Jumlah Angsuran',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      initialValue: jumlahAngsuran.toString(),
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Masukkan jumlah angsuran',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Masukkan jumlah angsuran';
+                        }
+                        final jumlah = int.tryParse(value);
+                        if (jumlah == null || jumlah <= 0) {
+                          return 'Masukkan angka yang valid';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        jumlahAngsuran = int.parse(value!);
+                      },
+                    ),
+                  ],
                 ],
                 const SizedBox(height: 24),
                 Center(
@@ -456,6 +556,36 @@ class _AjukanPeminjamanScreenState extends State<AjukanPeminjamanScreen> {
             ),
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primaryBlue,
+        unselectedItemColor: Colors.grey,
+        currentIndex: 1,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.local_shipping), label: 'Peminjaman'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.refresh), label: 'Isi Ulang'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Tagihan'),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Get.toNamed('/pelanggan/dashboard');
+              break;
+            case 1:
+              Get.toNamed('/pelanggan/ajukan-peminjaman');
+              break;
+            case 2:
+              Get.toNamed('/pelanggan/ajukan-isi-ulang');
+              break;
+            case 3:
+              Get.toNamed('/pelanggan/tagihan');
+              break;
+          }
+        },
       ),
     );
   }

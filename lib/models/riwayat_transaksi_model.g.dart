@@ -10,9 +10,9 @@ RiwayatTransaksi _$RiwayatTransaksiFromJson(Map<String, dynamic> json) =>
     RiwayatTransaksi(
       idRiwayatTransaksi: json['idRiwayatTransaksi'] as String,
       idTransaksi: json['idTransaksi'] as String,
-      idAkun: json['idAkun'] as String,
-      idPerorangan: json['idPerorangan'] as String,
-      idPerusahaan: json['idPerusahaan'] as String,
+      idAkun: json['idAkun'] as String?,
+      idPerorangan: json['idPerorangan'] as String?,
+      idPerusahaan: json['idPerusahaan'] as String?,
       tanggalTransaksi: DateTime.parse(json['tanggalTransaksi'] as String),
       totalTransaksi: (json['totalTransaksi'] as num).toDouble(),
       jumlahDibayar: (json['jumlahDibayar'] as num).toDouble(),
@@ -20,8 +20,10 @@ RiwayatTransaksi _$RiwayatTransaksiFromJson(Map<String, dynamic> json) =>
       tanggalJatuhTempo: json['tanggalJatuhTempo'] == null
           ? null
           : DateTime.parse(json['tanggalJatuhTempo'] as String),
-      tanggalSelesai: DateTime.parse(json['tanggalSelesai'] as String),
-      statusAkhir: json['statusAkhir'] as String? ?? 'success',
+      tanggalSelesai: json['tanggalSelesai'] == null
+          ? null
+          : DateTime.parse(json['tanggalSelesai'] as String),
+      statusAkhir: json['statusAkhir'] as String,
       totalPembayaran: (json['totalPembayaran'] as num).toDouble(),
       denda: (json['denda'] as num).toDouble(),
       durasiPeminjaman: (json['durasiPeminjaman'] as num?)?.toInt(),
@@ -40,7 +42,7 @@ Map<String, dynamic> _$RiwayatTransaksiToJson(RiwayatTransaksi instance) =>
       'jumlahDibayar': instance.jumlahDibayar,
       'metodePembayaran': instance.metodePembayaran,
       'tanggalJatuhTempo': instance.tanggalJatuhTempo?.toIso8601String(),
-      'tanggalSelesai': instance.tanggalSelesai.toIso8601String(),
+      'tanggalSelesai': instance.tanggalSelesai?.toIso8601String(),
       'statusAkhir': instance.statusAkhir,
       'totalPembayaran': instance.totalPembayaran,
       'denda': instance.denda,

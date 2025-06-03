@@ -77,7 +77,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                     color: Colors.white);
                               },
                             ),
-                            PopupMenuButton<String>(
+                            PopupMenuButton(
                               icon: const Icon(Icons.more_vert,
                                   color: Colors.white),
                               onSelected: (value) {
@@ -89,7 +89,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                         16, 16, 16, 16),
                                     backgroundColor: Colors.white,
                                     content: Column(
-                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
                                           'Apakah Anda yakin ingin keluar?',
@@ -100,7 +100,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
-                                        const SizedBox(height: 18),
+                                        const SizedBox(height: 16),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -116,23 +116,25 @@ class DashboardPelangganScreen extends StatelessWidget {
                                                 side: BorderSide(
                                                     color: AppColors.secondary),
                                                 shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            16)),
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
                                               ),
                                               child: const Text(
                                                 'Tidak',
                                                 style: TextStyle(
-                                                    color: AppColors.secondary,
-                                                    fontWeight:
-                                                        FontWeight.bold),
+                                                  color: AppColors.secondary,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                             const SizedBox(width: 16),
                                             ElevatedButton(
                                               onPressed: () {
-                                                authController.logout();
+                                                Get.find<AuthController>()
+                                                    .logout();
                                                 Get.back();
+                                                Get.offAllNamed('/login');
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor:
@@ -142,16 +144,16 @@ class DashboardPelangganScreen extends StatelessWidget {
                                                         vertical: 12,
                                                         horizontal: 48),
                                                 shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            16)),
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
                                               ),
                                               child: const Text(
                                                 'Ya',
                                                 style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight:
-                                                        FontWeight.bold),
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -159,21 +161,21 @@ class DashboardPelangganScreen extends StatelessWidget {
                                       ],
                                     ),
                                   );
-                                } else if (value == 'profile') {
-                                  Get.toNamed('/pelanggan/profil');
+                                } else if (value == 'notification') {
+                                  Get.toNamed('/pelanggan/notifikasi');
                                 }
                               },
                               itemBuilder: (BuildContext context) {
                                 return [
-                                  const PopupMenuItem<String>(
-                                    value: 'profile',
+                                  const PopupMenuItem(
+                                    value: 'notification',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.person,
+                                        Icon(Icons.notifications,
                                             color: Colors.black54, size: 20),
                                         SizedBox(width: 8),
                                         Text(
-                                          'Profil',
+                                          'Notifikasi',
                                           style: TextStyle(
                                             color: Colors.black87,
                                             fontSize: 14,
@@ -182,7 +184,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                  const PopupMenuItem<String>(
+                                  const PopupMenuItem(
                                     value: 'logout',
                                     child: Row(
                                       children: [
@@ -201,7 +203,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                   ),
                                 ];
                               },
-                            ),
+                            )
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -370,10 +372,10 @@ class DashboardPelangganScreen extends StatelessWidget {
                 case 0:
                   break;
                 case 1:
-                  Get.toNamed('/pelanggan/peminjaman');
+                  Get.toNamed('/pelanggan/ajukan-peminjaman');
                   break;
                 case 2:
-                  Get.toNamed('/pelanggan/isi-ulang');
+                  Get.toNamed('/pelanggan/ajukan-isi-ulang');
                   break;
                 case 3:
                   Get.toNamed('/pelanggan/tagihan');

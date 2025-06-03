@@ -254,5 +254,9 @@ class _LoginScreenState extends State<LoginScreen> {
       _emailController.text.trim(),
       _passwordController.text,
     );
+    if (authController.errorMessage.value.isNotEmpty) {
+      Get.snackbar('Error', authController.errorMessage.value,
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
   }
 }

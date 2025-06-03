@@ -1,47 +1,50 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/akun_model.dart';
+import '../services/api_service.dart';
 
 class AuthController extends GetxController {
   var isLoggedIn = false.obs;
-  var userId = ''.obs; // Tambahkan userId sebagai observable
+  var akunId = ''.obs;
   var userRole = 'pelanggan'.obs;
   var isLoading = false.obs;
   var errorMessage = ''.obs;
   var pendingAccounts = <Map<String, dynamic>>[].obs;
+  var akun = Rxn<Akun>();
   late SharedPreferences prefs;
+  late ApiService apiService;
 
   @override
   void onInit() async {
     super.onInit();
-    await _initPrefs();
+    prefs = await SharedPreferences.getInstance();
+    apiService = ApiService(prefs);
     await checkLoginStatus();
     _loadPendingAccounts();
-  }
-
-  Future<void> _initPrefs() async {
-    prefs = await SharedPreferences.getInstance();
   }
 
   Future<void> checkLoginStatus() async {
     try {
       final token = prefs.getString('auth_token');
       final role = prefs.getString('user_role') ?? 'pelanggan';
-      final storedUserId = prefs.getString('user_id') ??
-          ''; // Muat userId dari SharedPreferences
-      print(
-          'Check Login Status: token=$token, role=$role, userId=$storedUserId'); // Debugging
-      if (token != null && token.isNotEmpty) {
+      final storedAkunId = prefs.getString('akun_id') ?? '';
+      print('Stored akun_id: $storedAkunId'); // Debugging
+      if (token != null && token.isNotEmpty && storedAkunId.isNotEmpty) {
         isLoggedIn.value = true;
         userRole.value = role;
-        userId.value = storedUserId; // Set userId dari penyimpanan
+        akunId.value = storedAkunId;
+        // Hanya panggil getAkun jika akun_id adalah numerik
+        if (RegExp(r'^\d+$').hasMatch(storedAkunId)) {
+          akun.value = await apiService.getAkun(int.parse(storedAkunId));
+        }
       } else {
         isLoggedIn.value = false;
         userRole.value = 'pelanggan';
-        userId.value = ''; // Reset userId jika tidak login
+        akunId.value = '';
       }
     } catch (e) {
       errorMessage.value = 'Gagal memeriksa status login: $e';
-      print('Error checking login status: $e'); // Debugging
+      print('Check login error: $e'); // Debugging
     }
   }
 
@@ -49,90 +52,48 @@ class AuthController extends GetxController {
     isLoading.value = true;
     errorMessage.value = '';
     try {
-      print('Login attempt: email=$email, password=$password'); // Debugging
-
-      // Pengecekan kredensial statis untuk administrator
-      if (email == 'administrator@larisjayagas.com' &&
-          password == 'administrator123') {
-        await prefs.setString('auth_token',
-            'administrator_token_${DateTime.now().millisecondsSinceEpoch}');
-        await prefs.setString('user_role', 'administrator');
-        await prefs.setString(
-            'user_id', 'AKN001'); // Set userId untuk administrator
+      final data = await apiService.login(email, password);
+      if (data != null && data['success'] == true) {
         isLoggedIn.value = true;
-        userRole.value = 'administrator';
-        userId.value = 'AKN001'; // Set userId
-        print(
-            'Admin login successful, navigating to /administrator/dashboard'); // Debugging
-        await Future.delayed(Duration.zero); // Pastikan status diperbarui
-        Get.offAllNamed('/administrator/dashboard');
-        return;
-      }
-      // Pengecekan kredensial statis untuk pelanggan
-      else if (email == 'pelanggan@larisjayagas.com' &&
-          password == 'pelanggan123') {
-        await prefs.setString('auth_token',
-            'pelanggan_token_${DateTime.now().millisecondsSinceEpoch}');
-        await prefs.setString('user_role', 'pelanggan');
-        await prefs.setString(
-            'user_id', 'AKN002'); // Set userId untuk pelanggan
-        isLoggedIn.value = true;
-        userRole.value = 'pelanggan';
-        userId.value = 'AKN002'; // Set userId
-        print(
-            'Pelanggan login successful, navigating to /pelanggan/dashboard'); // Debugging
-        await Future.delayed(Duration.zero); // Pastikan status diperbarui
-        Get.offAllNamed('/pelanggan/dashboard');
-        return;
-      }
-
-      // Pengecekan akun tertunda di SharedPreferences
-      final registeredEmails = prefs.getStringList('registered_emails') ?? [];
-      bool accountExists = false;
-      bool isActive = false;
-
-      for (var registeredEmail in registeredEmails) {
-        if (registeredEmail == email) {
-          accountExists = true;
-          final storedPassword = prefs.getString('pending_${email}_password');
-          isActive = prefs.getBool('pending_${email}_status_aktif') ?? false;
-
-          if (storedPassword == password && isActive) {
-            await prefs.setString('auth_token',
-                'pelanggan_token_${DateTime.now().millisecondsSinceEpoch}');
-            await prefs.setString('user_role', 'pelanggan');
-            await prefs.setString(
-                'user_id', 'AKN003'); // Set userId untuk akun tertunda
-            isLoggedIn.value = true;
-            userRole.value = 'pelanggan';
-            userId.value = 'AKN003'; // Set userId
-            print(
-                'Registered account login successful, navigating to /pelanggan/dashboard'); // Debugging
-            await Future.delayed(Duration.zero); // Pastikan status diperbarui
-            Get.offAllNamed('/pelanggan/dashboard');
-            return;
-          } else if (storedPassword == password && !isActive) {
-            errorMessage.value =
-                'Akun Anda belum dikonfirmasi oleh administrator';
-            print('Account not confirmed: $email'); // Debugging
-            return;
-          } else {
-            errorMessage.value = 'Email atau password salah';
-            print(
-                'Invalid email or password for registered account: $email'); // Debugging
-            return;
-          }
-        }
-      }
-
-      // Jika email tidak ditemukan
-      if (!accountExists) {
-        errorMessage.value = 'Email atau password salah';
-        print('Account not found: $email'); // Debugging
+        userRole.value = data['data']['role'];
+        final akunIdValue = data['data']['akun_id'].toString();
+        akunId.value = akunIdValue;
+        await prefs.setString('auth_token', data['token']);
+        await prefs.setString('user_role', data['data']['role']);
+        await prefs.setString('akun_id', akunIdValue);
+        akun.value = Akun(
+          idAkun: akunIdValue,
+          idPerorangan: null,
+          email: data['data']['email'],
+          password: '',
+          role: data['data']['role'],
+          statusAktif: true,
+          perorangan: null,
+        );
+        Get.offAllNamed(userRole.value == 'administrator'
+            ? '/administrator/dashboard'
+            : '/pelanggan/dashboard');
+      } else {
+        errorMessage.value = data?['message'] ?? 'Login gagal';
       }
     } catch (e) {
-      errorMessage.value = 'Terjadi kesalahan saat login: $e';
+      errorMessage.value = 'Error login: $e';
       print('Login error: $e'); // Debugging
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> register(Map<String, dynamic> data) async {
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
+      await apiService.register(data);
+      Get.snackbar('Sukses', 'Pendaftaran berhasil, menunggu konfirmasi admin');
+      Get.toNamed('/login');
+    } catch (e) {
+      errorMessage.value = e.toString();
+      print('Register error: $e'); // Debugging
     } finally {
       isLoading.value = false;
     }
@@ -140,13 +101,14 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     try {
+      await apiService.logout();
       await prefs.remove('auth_token');
       await prefs.remove('user_role');
-      await prefs.remove('user_id'); // Hapus userId saat logout
+      await prefs.remove('akun_id');
       isLoggedIn.value = false;
       userRole.value = 'pelanggan';
-      userId.value = ''; // Reset userId
-      print('Logout successful, navigating to /'); // Debugging
+      akunId.value = '';
+      akun.value = null;
       Get.offAllNamed('/');
     } catch (e) {
       errorMessage.value = 'Gagal logout: $e';
@@ -155,24 +117,10 @@ class AuthController extends GetxController {
   }
 
   void _loadPendingAccounts() {
-    final pendingEmails = prefs.getStringList('registered_emails') ?? [];
     pendingAccounts.clear();
-    for (var email in pendingEmails) {
-      if (prefs.getBool('pending_${email}_status_aktif') == false) {
-        pendingAccounts.add({
-          'email': email,
-          'password': prefs.getString('pending_${email}_password'),
-          'role': prefs.getString('pending_${email}_role'),
-        });
-      }
-    }
-    print('Pending accounts loaded: ${pendingAccounts.length}'); // Debugging
   }
 
   Future<void> confirmAccount(String email) async {
-    await prefs.setBool('pending_${email}_status_aktif', true);
-    _loadPendingAccounts();
     Get.snackbar('Sukses', 'Akun $email telah dikonfirmasi');
-    print('Account confirmed: $email'); // Debugging
   }
 }

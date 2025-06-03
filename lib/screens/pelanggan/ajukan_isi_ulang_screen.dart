@@ -58,7 +58,7 @@ class _AjukanIsiUlangScreenState extends State<AjukanIsiUlangScreen> {
   }
 
   void submitIsiUlang() {
-    if (authController == null || authController!.userId.value == null) {
+    if (authController == null || !authController!.isLoggedIn.value) {
       Get.snackbar(
           'Error', 'User tidak terautentikasi. Silakan login kembali.');
       Get.offAllNamed(AppRoutes.login);
@@ -96,7 +96,7 @@ class _AjukanIsiUlangScreenState extends State<AjukanIsiUlangScreen> {
       // Tambah transaksi ke transaksiList
       final transaksi = Transaksi(
         idTransaksi: transaksiId,
-        idAkun: authController!.userId.value!,
+        idAkun: authController!.akunId.value,
         idPerorangan: null,
         idPerusahaan: null,
         tanggalTransaksi: DateTime.now(),
@@ -107,7 +107,7 @@ class _AjukanIsiUlangScreenState extends State<AjukanIsiUlangScreen> {
         tanggalJatuhTempo: DateTime.now()
             .add(const Duration(days: 7)), // 7 hari untuk pengambilan
         akun: DummyData.akunList
-            .firstWhere((a) => a.idAkun == authController!.userId.value!),
+            .firstWhere((a) => a.idAkun == authController!.akunId.value),
         statusTransaksi: DummyData.statusTransaksiList
             .firstWhere((s) => s.idStatusTransaksi == 'STS002'),
         detailTransaksis: [],

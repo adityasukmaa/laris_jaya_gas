@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.laris_jaya_gas.app-mergeDebugResources-46:/values-da/values-da.xml",
+            "outputFile": "com.example.laris_jaya_gas.app-mergeDebugResources-47:/values-da/values-da.xml",
             "map": [
                 {
                     "source": "C:\\Users\\adity\\.gradle\\caches\\transforms-3\\5721d2dca1c20b34574c347f20f3254f\\transformed\\jetified-play-services-base-18.5.0\\res\\values-da\\values.xml",

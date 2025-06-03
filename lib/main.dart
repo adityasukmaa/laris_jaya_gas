@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:laris_jaya_gas/controllers/administrator_controller.dart';
 import 'package:laris_jaya_gas/controllers/pelanggan_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/auth_controller.dart';
@@ -12,9 +13,10 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
 
   // Inisialisasi AuthController dengan SharedPreferences
-  Get.put(AuthController()..prefs = prefs); 
+  Get.put(AuthController()..prefs = prefs);
   Get.put(TabungController());
   Get.put(TransaksiController());
+  Get.put(AdministratorController());
   Get.put(PelangganController());
 
   // Tentukan initialRoute berdasarkan status login

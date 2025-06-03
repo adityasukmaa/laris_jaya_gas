@@ -11,7 +11,9 @@ Peminjaman _$PeminjamanFromJson(Map<String, dynamic> json) => Peminjaman(
       idDetailTransaksi: json['idDetailTransaksi'] as String,
       tanggalPinjam: DateTime.parse(json['tanggalPinjam'] as String),
       statusPinjam: json['statusPinjam'] as String,
-      tanggalKembali: null,
+      tanggalKembali: json['tanggalKembali'] == null
+          ? null
+          : DateTime.parse(json['tanggalKembali'] as String),
     );
 
 Map<String, dynamic> _$PeminjamanToJson(Peminjaman instance) =>
@@ -20,4 +22,5 @@ Map<String, dynamic> _$PeminjamanToJson(Peminjaman instance) =>
       'idDetailTransaksi': instance.idDetailTransaksi,
       'tanggalPinjam': instance.tanggalPinjam.toIso8601String(),
       'statusPinjam': instance.statusPinjam,
+      'tanggalKembali': instance.tanggalKembali?.toIso8601String(),
     };

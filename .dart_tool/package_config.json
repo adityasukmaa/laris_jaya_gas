@@ -152,6 +152,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "dbus",
+      "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/dbus-0.7.11",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "device_info_plus",
       "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/device_info_plus-11.3.0",
       "packageUri": "lib/",
@@ -198,6 +204,30 @@
       "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-5.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "flutter_local_notifications",
+      "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications-19.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "flutter_local_notifications_linux",
+      "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_linux-6.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "flutter_local_notifications_platform_interface",
+      "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_platform_interface-9.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "flutter_local_notifications_windows",
+      "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications_windows-1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
     },
     {
       "name": "flutter_test",
@@ -614,6 +644,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "timezone",
+      "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/timezone-0.10.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
+    },
+    {
       "name": "timing",
       "rootUri": "file:///C:/Users/adity/AppData/Local/Pub/Cache/hosted/pub.dev/timing-1.0.2",
       "packageUri": "lib/",
@@ -698,7 +734,7 @@
       "languageVersion": "3.6"
     }
   ],
-  "generated": "2025-05-29T13:50:27.338021Z",
+  "generated": "2025-06-03T05:29:49.116077Z",
   "generator": "pub",
   "generatorVersion": "3.6.2",
   "flutterRoot": "file:///C:/src/flutter",
