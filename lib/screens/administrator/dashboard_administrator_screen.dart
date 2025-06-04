@@ -48,6 +48,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
           statistics['total_transaksi_berjalan'] ?? 0;
       final int transactionCount = statistics['total_transaksi'] ?? 0;
       final int stockCount = statistics['stok_tabung'] ?? 0;
+      final int historyCount = statistics['riwayat_transaksi'] ?? 0;
       final int customerCount = statistics['jumlah_pelanggan'] ?? 0;
 
       return Scaffold(
@@ -271,8 +272,8 @@ class DashboardAdministratorScreen extends StatelessWidget {
                                 ]), () {
                               Get.toNamed('/administrator/transaksi');
                             }),
-                            _buildMenuCard('Riwayat', Icons.history, '',
-                                Colors.white, () {}),
+                            _buildMenuCard('Riwayat', Icons.history,
+                                '$historyCount', Colors.white, () {}),
                             _buildMenuCard('Data Pelanggan', Icons.people,
                                 '$customerCount', Colors.white, () {}),
                           ],
