@@ -11,6 +11,10 @@ class ApiService {
   final SharedPreferences prefs;
 
   ApiService(this.prefs);
+  Future<bool> isLoggedIn() async {
+    final token = prefs.getString('auth_token');
+    return token != null && token.isNotEmpty;
+  }
 
   Future<Map<String, dynamic>?> login(String email, String password) async {
     try {
@@ -31,12 +35,12 @@ class ApiService {
         throw data['message'] ?? 'Login gagal';
       }
     } catch (e) {
-      print('Login error: $e'); // Debugging
-      throw 'Error login: $e';
+      // Debugging
+      throw '$e';
     }
   }
 
-  Future<void> register(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>?> register(Map<String, dynamic> data) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/register'),
@@ -46,12 +50,15 @@ class ApiService {
       print(
           'Register response: ${response.statusCode} ${response.body}'); // Debugging
       final responseData = jsonDecode(response.body);
-      if (response.statusCode != 201 || responseData['success'] != true) {
-        throw responseData['message'] ?? 'Pendaftaran gagal';
+      if (response.statusCode == 201 && responseData['success'] == true) {
+        return responseData;
+      } else {
+        throw responseData['errors'] ??
+            {'general': responseData['message'] ?? 'Pendaftaran gagal'};
       }
     } catch (e) {
-      print('Register error: $e'); // Debugging
-      throw 'Error register: $e';
+      print('Register error: $e');
+      rethrow;
     }
   }
 
@@ -91,6 +98,101 @@ class ApiService {
           'Logout response: ${response.statusCode} ${response.body}'); // Debugging
     } catch (e) {
       print('Error logout: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _getWithToken(String endpoint) async {
+    final token = prefs.getString('auth_token');
+    if (token == null) {
+      throw 'Token tidak ditemukan';
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print('API response [$endpoint]: ${response.statusCode} ${response.body}');
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) {
+      return data;
+    } else {
+      throw data['message'] ?? 'Gagal mengambil data';
+    }
+  }
+
+  Future<Map<String, dynamic>> getAdministratorProfile() async {
+    final token = prefs.getString('auth_token');
+    if (token == null) {
+      throw 'Token tidak ditemukan';
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/administrator/profile'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    ).timeout(const Duration(seconds: 30));
+
+    print(
+        'API response [administrator/profile]: ${response.statusCode} ${response.body}');
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success']) {
+      return data;
+    } else if (response.statusCode == 401) {
+      throw 'Unauthorized: ${data['message'] ?? 'Token tidak valid'}';
+    } else if (response.statusCode == 404) {
+      throw 'Not Found: ${data['message'] ?? 'Data tidak ditemukan'}';
+    } else {
+      throw data['message'] ?? 'Gagal mengambil profil';
+    }
+  }
+
+  Future<Map<String, dynamic>> getStatistics() async {
+    return await _getWithToken('administrator/statistics');
+  }
+
+  Future<List<dynamic>> getPendingAccounts() async {
+    final data = await _getWithToken('administrator/pending-accounts');
+    return data['data'];
+  }
+
+  Future<void> confirmAccount(String email) async {
+    final token = prefs.getString('auth_token');
+    if (token == null) {
+      throw 'Token tidak ditemukan';
+    }
+
+    final response = await http
+        .post(
+          Uri.parse('$baseUrl/administrator/confirm-account'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'email': email}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    print('Confirm account response: ${response.statusCode} ${response.body}');
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 && data['success'] == true) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw 'Unauthorized: ${data['message'] ?? 'Token tidak valid'}';
+    } else if (response.statusCode == 400) {
+      throw 'Bad Request: ${data['message'] ?? 'Akun sudah aktif'}';
+    } else if (response.statusCode == 404) {
+      throw 'Not Found: ${data['message'] ?? 'Akun tidak ditemukan'}';
+    } else if (response.statusCode == 422) {
+      throw 'Validation Error: ${data['message'] ?? 'Data tidak valid'}';
+    } else {
+      throw data['message'] ?? 'Gagal mengkonfirmasi akun';
     }
   }
 

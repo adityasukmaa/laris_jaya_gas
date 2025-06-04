@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../controllers/auth_controller.dart';
 import '../../widgets/primary_button.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -18,8 +18,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  var isLoading = false.obs;
-  var errorMessage = ''.obs;
+
+  @override
+  void initState() {
+    super.initState();
+    final AuthController authController = Get.find<AuthController>();
+    authController.fieldErrors.clear(); // Reset error per field
+  }
 
   @override
   void dispose() {
@@ -31,6 +36,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AuthController authController = Get.find<AuthController>();
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -67,28 +74,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        _buildEmailField(),
+                        _buildEmailField(authController),
                         const SizedBox(height: 16),
-                        _buildPasswordField(),
+                        _buildPasswordField(authController),
                         const SizedBox(height: 16),
-                        _buildConfirmPasswordField(),
+                        _buildConfirmPasswordField(authController),
                         const SizedBox(height: 8),
-                        Obx(() => isLoading.value
+                        Obx(() => authController.isLoading.value
                             ? const Center(child: CircularProgressIndicator())
-                            : const SizedBox.shrink()),
-                        Obx(() => errorMessage.value.isNotEmpty
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: Text(
-                                  errorMessage.value,
-                                  style: const TextStyle(color: Colors.red),
-                                ),
-                              )
                             : const SizedBox.shrink()),
                         const SizedBox(height: 32),
                         PrimaryButton(
                           label: 'Daftar',
-                          onPressed: () => _handleRegister(),
+                          onPressed: () => _handleRegister(authController),
                         ),
                         const Spacer(),
                         _buildLoginPrompt(context),
@@ -116,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildEmailField() {
+  Widget _buildEmailField(AuthController authController) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -154,11 +152,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             return null;
           },
         ),
+        Obx(() => authController.fieldErrors['email'] != null
+            ? Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  authController.fieldErrors['email']!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              )
+            : const SizedBox.shrink()),
       ],
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(AuthController authController) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -208,11 +215,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             return null;
           },
         ),
+        Obx(() => authController.fieldErrors['password'] != null
+            ? Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  authController.fieldErrors['password']!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              )
+            : const SizedBox.shrink()),
       ],
     );
   }
 
-  Widget _buildConfirmPasswordField() {
+  Widget _buildConfirmPasswordField(AuthController authController) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -264,6 +280,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             return null;
           },
         ),
+        Obx(() => authController.fieldErrors['password_confirmation'] != null
+            ? Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  authController.fieldErrors['password_confirmation']!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              )
+            : const SizedBox.shrink()),
       ],
     );
   }
@@ -296,38 +321,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  void _handleRegister() async {
+  void _handleRegister(AuthController authController) async {
     if (!_formKey.currentState!.validate()) return;
 
-    isLoading.value = true;
-    errorMessage.value = '';
+    final data = {
+      'email': _emailController.text.trim(),
+      'password': _passwordController.text,
+      'password_confirmation': _confirmPasswordController.text,
+    };
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final email = _emailController.text.trim();
-      final password = _passwordController.text;
-      final existingEmails = prefs.getStringList('registered_emails') ?? [];
-
-      if (existingEmails.contains(email)) {
-        errorMessage.value = 'Email sudah terdaftar';
-      } else {
-        await prefs
-            .setStringList('registered_emails', [...existingEmails, email]);
-        await prefs.setString('pending_${email}_password', password);
-        await prefs.setString('pending_${email}_role', 'pelanggan');
-        await prefs.setBool('pending_${email}_status_aktif', false);
-
-        Get.snackbar(
-          'Sukses',
-          'Pendaftaran berhasil. Akun Anda akan aktif setelah dikonfirmasi oleh administrator.',
-          snackPosition: SnackPosition.TOP,
-        );
-        Get.offNamed('/'); // Kembali ke SplashScreen setelah daftar
-      }
-    } catch (e) {
-      errorMessage.value = 'Terjadi kesalahan saat mendaftar: $e';
-    } finally {
-      isLoading.value = false;
-    }
+    await authController.register(data);
   }
 }

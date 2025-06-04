@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/akun_model.dart';
@@ -10,6 +11,7 @@ class AuthController extends GetxController {
   var isLoading = false.obs;
   var errorMessage = ''.obs;
   var pendingAccounts = <Map<String, dynamic>>[].obs;
+  var fieldErrors = <String, String>{}.obs;
   var akun = Rxn<Akun>();
   late SharedPreferences prefs;
   late ApiService apiService;
@@ -77,7 +79,7 @@ class AuthController extends GetxController {
         errorMessage.value = data?['message'] ?? 'Login gagal';
       }
     } catch (e) {
-      errorMessage.value = 'Error login: $e';
+      errorMessage.value = '$e';
       print('Login error: $e'); // Debugging
     } finally {
       isLoading.value = false;
@@ -86,14 +88,35 @@ class AuthController extends GetxController {
 
   Future<void> register(Map<String, dynamic> data) async {
     isLoading.value = true;
-    errorMessage.value = '';
+    fieldErrors.clear();
     try {
-      await apiService.register(data);
-      Get.snackbar('Sukses', 'Pendaftaran berhasil, menunggu konfirmasi admin');
+      final response = await apiService.register(data);
+      Get.snackbar(
+        'Sukses',
+        response?['message'] ??
+            'Pendaftaran berhasil, menunggu konfirmasi admin',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
       Get.toNamed('/login');
     } catch (e) {
-      errorMessage.value = e.toString();
-      print('Register error: $e'); // Debugging
+      if (e is Map<String, dynamic>) {
+        // Map error dari API
+        e.forEach((key, value) {
+          fieldErrors[key] = value is List ? value.first : value.toString();
+        });
+      } else {
+        fieldErrors['general'] = e.toString();
+      }
+      Get.snackbar(
+        'Error',
+        fieldErrors['general'] ?? 'Pendaftaran gagal',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('Register error: $e');
     } finally {
       isLoading.value = false;
     }

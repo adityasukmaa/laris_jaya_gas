@@ -18,6 +18,14 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Reset errorMessage saat halaman dimuat
+    final AuthController authController = Get.find<AuthController>();
+    authController.errorMessage.value = '';
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -70,25 +78,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
                         _buildForgotPassword(),
                         const SizedBox(height: 32),
-                        // Perbaikan: Pisahkan Obx untuk isLoading dan errorMessage
-                        Obx(() {
-                          return authController.isLoading.value
-                              ? const Center(child: CircularProgressIndicator())
-                              : PrimaryButton(
-                                  label: 'Masuk',
-                                  onPressed: () =>
-                                      _handleSignIn(authController),
-                                );
-                        }),
+                        Obx(() => authController.isLoading.value
+                            ? const Center(child: CircularProgressIndicator())
+                            : PrimaryButton(
+                                label: 'Masuk',
+                                onPressed: () => _handleSignIn(authController),
+                              )),
                         const SizedBox(height: 12),
-                        Obx(() {
-                          return authController.errorMessage.value.isNotEmpty
-                              ? Text(
+                        Obx(() => authController.errorMessage.value.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Text(
                                   authController.errorMessage.value,
                                   style: const TextStyle(color: Colors.red),
-                                )
-                              : const SizedBox.shrink();
-                        }),
+                                ),
+                              )
+                            : const SizedBox.shrink()),
                         const Spacer(),
                         _buildSignUpPrompt(context),
                         const SizedBox(height: 40),
@@ -256,7 +261,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     if (authController.errorMessage.value.isNotEmpty) {
       Get.snackbar('Error', authController.errorMessage.value,
-          backgroundColor: Colors.red, colorText: Colors.white);
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     }
   }
 }

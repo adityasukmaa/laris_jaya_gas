@@ -11,3 +11,7 @@ class AppColors {
   static const Color blackText = Color(0xFF212121); // Hitam untuk teks
   static const Color redFlame = Color(0xFFD32F2F); // Merah untuk api pada logo
 }
+
+class AppConstants {
+  static const String appName = 'Laris Jaya Gas';
+}
