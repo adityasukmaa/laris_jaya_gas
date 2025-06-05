@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:laris_jaya_gas/controllers/auth_controller.dart';
 import 'package:laris_jaya_gas/controllers/pelanggan_controller.dart';
+import 'package:laris_jaya_gas/models/tabung_model.dart';
+import 'package:laris_jaya_gas/models/transaksi_model.dart';
 import 'package:laris_jaya_gas/routes/app_routes.dart';
 import 'package:laris_jaya_gas/utils/constants.dart';
 
@@ -25,12 +27,12 @@ class DashboardPelangganScreen extends StatelessWidget {
 
         print(
             'DashboardPelangganScreen: isLoggedIn=${authController.isLoggedIn.value}, '
-            'userRole=${authController.userRole.value}'); // Debugging
+            'userRole=${authController.userRole.value}');
 
         if (!authController.isLoggedIn.value ||
             authController.userRole.value != 'pelanggan') {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            print('Invalid login or role, redirecting to /login'); // Debugging
+            print('Invalid login or role, redirecting to /login');
             Get.offAllNamed(AppRoutes.login);
           });
           return const Scaffold(
@@ -46,14 +48,16 @@ class DashboardPelangganScreen extends StatelessWidget {
         final double screenHeight = MediaQuery.of(context).size.height;
         final double paddingTop = screenHeight * 0.05;
 
-        final int activeCylinders = controller.activeCylinders.length;
-
         return Scaffold(
           backgroundColor: Colors.grey[100],
           body: Obx(() {
-            if (controller.namaPelanggan.value.isEmpty) {
+            if (controller.isLoading.value || controller.akun.value == null) {
               return const Center(child: CircularProgressIndicator());
             }
+            final akun = controller.akun.value!;
+            final namaDisplay = akun.perorangan?.namaLengkap ??
+                akun.perorangan?.perusahaan?.namaPerusahaan ??
+                akun.email;
             return SingleChildScrollView(
               child: Column(
                 children: [
@@ -177,9 +181,8 @@ class DashboardPelangganScreen extends StatelessWidget {
                                         Text(
                                           'Notifikasi',
                                           style: TextStyle(
-                                            color: Colors.black87,
-                                            fontSize: 14,
-                                          ),
+                                              color: Colors.black87,
+                                              fontSize: 14),
                                         ),
                                       ],
                                     ),
@@ -194,16 +197,15 @@ class DashboardPelangganScreen extends StatelessWidget {
                                         Text(
                                           'Logout',
                                           style: TextStyle(
-                                            color: Colors.black87,
-                                            fontSize: 14,
-                                          ),
+                                              color: Colors.black87,
+                                              fontSize: 14),
                                         ),
                                       ],
                                     ),
                                   ),
                                 ];
                               },
-                            )
+                            ),
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -216,7 +218,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                     color: Colors.white, fontSize: 22),
                               ),
                               Text(
-                                '${controller.namaPelanggan.value} - Laris Jaya Gas',
+                                '$namaDisplay - Laris Jaya Gas',
                                 style: const TextStyle(
                                     color: Colors.white70, fontSize: 16),
                               ),
@@ -236,7 +238,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              '$activeCylinders Tabung Aktif',
+                                              '${controller.activeCylinders.length} Tabung Aktif',
                                               style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
@@ -244,22 +246,20 @@ class DashboardPelangganScreen extends StatelessWidget {
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              controller.namaPelanggan.value,
+                                              namaDisplay,
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.bold),
                                             ),
                                             Text(
-                                              controller.emailPelanggan.value,
+                                              akun.email,
                                               style:
                                                   const TextStyle(fontSize: 14),
                                             ),
                                             Text(
-                                              'Status: ${controller.accountStatus.value}',
+                                              'Status: ${akun.statusAktif ? 'Aktif' : 'Non-Aktif'}',
                                               style: TextStyle(
                                                 fontSize: 14,
-                                                color: controller.accountStatus
-                                                            .value ==
-                                                        'Aktif'
+                                                color: akun.statusAktif
                                                     ? Colors.green
                                                     : Colors.red,
                                               ),
@@ -330,9 +330,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                         const Text(
                           'Tabung Aktif',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         _buildCylinderList(controller),
@@ -340,9 +338,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                         const Text(
                           'Riwayat Transaksi',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         _buildTransactionHistory(controller),
@@ -457,24 +453,25 @@ class DashboardPelangganScreen extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: controller.activeCylinders.length,
             itemBuilder: (context, index) {
-              final cylinder = controller.activeCylinders[index];
+              final Tabung cylinder = controller.activeCylinders[index];
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
                   leading: const Icon(Icons.propane_tank),
-                  title: Text('Tabung: ${cylinder['kodeTabung']}'),
-                  subtitle: Text('Jenis: ${cylinder['namaJenis']}'),
+                  title: Text('Tabung: ${cylinder.kodeTabung}'),
+                  subtitle: Text(
+                      'Jenis: ${cylinder.jenisTabung?.namaJenis ?? 'Unknown'}'),
                   trailing: Text(
-                    cylinder['statusTabung'],
+                    cylinder.statusTabung?.statusTabung ?? 'Unknown',
                     style: TextStyle(
-                      color: cylinder['statusTabung'] == 'dipinjam'
+                      color: cylinder.statusTabung?.statusTabung == 'dipinjam'
                           ? Colors.green
                           : Colors.grey,
                     ),
                   ),
                   onTap: () =>
-                      controller.viewCylinderDetails(cylinder['idTabung']),
+                      controller.viewCylinderDetails(cylinder.idTabung ?? ''),
                 ),
               );
             },
@@ -492,25 +489,29 @@ class DashboardPelangganScreen extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: controller.transactionHistory.length,
             itemBuilder: (context, index) {
-              final transaction = controller.transactionHistory[index];
+              final Transaksi transaction =
+                  controller.transactionHistory[index];
+              final detail = transaction.detailTransaksis?.isNotEmpty == true
+                  ? transaction.detailTransaksis![0]
+                  : null;
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
                   leading: const Icon(Icons.receipt),
                   title: Text(
-                      '${transaction['namaJenisTransaksi']} - ${transaction['idTransaksi']}'),
-                  subtitle: Text('Tanggal: ${transaction['tanggalTransaksi']}'),
+                      '${detail?.jenisTransaksi?.namaJenisTransaksi ?? 'Transaksi'} - ${transaction.idTransaksi}'),
+                  subtitle: Text('Tanggal: ${transaction.tanggalTransaksi}'),
                   trailing: Text(
-                    transaction['status'],
+                    transaction.statusTransaksi?.status ?? 'Unknown',
                     style: TextStyle(
-                      color: transaction['status'] == 'success'
+                      color: transaction.statusTransaksi?.status == 'success'
                           ? Colors.green
                           : Colors.grey,
                     ),
                   ),
                   onTap: () => controller
-                      .viewTransactionDetails(transaction['idTransaksi']),
+                      .viewTransactionDetails(transaction.idTransaksi),
                 ),
               );
             },

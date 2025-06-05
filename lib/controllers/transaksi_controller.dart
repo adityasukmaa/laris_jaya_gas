@@ -22,14 +22,14 @@ class TransaksiController extends GetxController {
   }
 
   Future<void> loadTransaksi() async {
-    final akunIdString = prefs.getString('akun_id') ?? '';
+    final akunIdString = prefs.getString('id_akun') ?? '';
     if (akunIdString.isEmpty) return;
     try {
       final akunId = int.parse(akunIdString);
-      transaksiList.value = await apiService.getTransaksis(akunId);
+      // transaksiList.value = await apiService.getTransaksis(akunId);
       filteredTransaksiList.value = transaksiList;
     } catch (e) {
-      print('Error parsing akun_id or fetching transaksis: $e');
+      print('Error parsing id_akun or fetching transaksis: $e');
     }
   }
 
@@ -37,7 +37,8 @@ class TransaksiController extends GetxController {
     selectedTransaksi.value = transaksi;
   }
 
-  Future<void> updateTransaksiStatus(String transaksiId, String statusId, double jumlahDibayar) async {
+  Future<void> updateTransaksiStatus(
+      String transaksiId, String statusId, double jumlahDibayar) async {
     // Implementasi update status via API
     await loadTransaksi();
     applyFilter();
@@ -48,13 +49,16 @@ class TransaksiController extends GetxController {
 
     if (selectedJenisTransaksi.value != 'Semua') {
       tempList = tempList.where((transaksi) {
-        return transaksi.detailTransaksis?.firstOrNull?.jenisTransaksi?.namaJenisTransaksi == selectedJenisTransaksi.value;
+        return transaksi.detailTransaksis?.firstOrNull?.jenisTransaksi
+                ?.namaJenisTransaksi ==
+            selectedJenisTransaksi.value;
       }).toList();
     }
 
     if (selectedStatusTransaksi.value != 'Semua') {
       tempList = tempList.where((transaksi) {
-        return transaksi.statusTransaksi?.status == selectedStatusTransaksi.value;
+        return transaksi.statusTransaksi?.status ==
+            selectedStatusTransaksi.value;
       }).toList();
     }
 
@@ -63,15 +67,20 @@ class TransaksiController extends GetxController {
 
   int get totalTransaksiBerjalan {
     final now = DateTime.now();
-    return filteredTransaksiList.where((transaksi) =>
-        transaksi.statusTransaksi?.status != 'success' ||
-        (transaksi.tanggalJatuhTempo != null && transaksi.tanggalJatuhTempo!.isAfter(now))).length;
+    return filteredTransaksiList
+        .where((transaksi) =>
+            transaksi.statusTransaksi?.status != 'success' ||
+            (transaksi.tanggalJatuhTempo != null &&
+                transaksi.tanggalJatuhTempo!.isAfter(now)))
+        .length;
   }
 
   int get totalTransaksiBulanIni {
     final now = DateTime.now();
-    return filteredTransaksiList.where((transaksi) =>
-        transaksi.tanggalTransaksi.month == now.month &&
-        transaksi.tanggalTransaksi.year == now.year).length;
+    return filteredTransaksiList
+        .where((transaksi) =>
+            transaksi.tanggalTransaksi.month == now.month &&
+            transaksi.tanggalTransaksi.year == now.year)
+        .length;
   }
 }

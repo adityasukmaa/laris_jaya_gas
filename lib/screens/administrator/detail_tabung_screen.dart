@@ -19,7 +19,7 @@ class DetailTabungScreen extends StatelessWidget {
   final Color primaryBlue = const Color(0xFF0172B2);
   final GlobalKey _qrKey = GlobalKey(); // Key untuk menangkap QR code
 
-  DetailTabungScreen({super.key});
+  DetailTabungScreen({super.key, required String kodeTabung});
 
   Future<bool> _checkAndRequestPermission() async {
     Permission permission;

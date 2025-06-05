@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:laris_jaya_gas/services/api_service.dart';
+import 'package:laris_jaya_gas/controllers/auth_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class AdministratorController extends GetxController {
   var pendingAccounts = <Map<String, dynamic>>[].obs;
@@ -28,14 +29,22 @@ class AdministratorController extends GetxController {
     try {
       isLoading.value = true;
       final profile = await apiService.getAdministratorProfile();
-      administratorProfile.value = profile['data'];
+      administratorProfile.value = profile;
       final stats = await apiService.getStatistics();
-      statistics.value = stats['data'];
+      statistics.value = stats;
       final pending = await apiService.getPendingAccounts();
       pendingAccounts.assignAll(pending.cast<Map<String, dynamic>>());
     } catch (e) {
+      print('Fetch admin data error: $e');
       Get.snackbar('Error', e.toString(),
           backgroundColor: Colors.red, colorText: Colors.white);
+      if (e.toString().contains('Unauthorized') ||
+          e.toString().contains('Forbidden')) {
+        final authController = Get.find<AuthController>();
+        if (authController.isLoggedIn.value) {
+          authController.logout();
+        }
+      }
     } finally {
       isLoading.value = false;
     }
@@ -49,6 +58,7 @@ class AdministratorController extends GetxController {
       Get.snackbar('Sukses', 'Akun berhasil dikonfirmasi',
           backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
+      print('Confirm account error: $e');
       Get.snackbar('Error', e.toString(),
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {

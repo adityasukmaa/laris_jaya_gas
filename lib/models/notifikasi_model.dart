@@ -9,7 +9,7 @@ class Notifikasi {
   final String idTagihan;
   final String idTemplate;
   final DateTime tanggalTerjadwal;
-  final bool statusBaca;
+  bool statusBaca;
   final String waktuDikirim;
   @JsonKey(includeFromJson: false, includeToJson: false)
   NotifikasiTemplate? template;
