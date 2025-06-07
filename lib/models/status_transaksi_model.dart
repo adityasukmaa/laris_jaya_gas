@@ -1,18 +1,23 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'status_transaksi_model.g.dart';
-
-@JsonSerializable()
 class StatusTransaksi {
-  final String idStatusTransaksi;
-  final String status;
+  final String? idStatusTransaksi;
+  final String? status;
 
   StatusTransaksi({
-    required this.idStatusTransaksi,
-    required this.status,
+    this.idStatusTransaksi,
+    this.status,
   });
 
-  factory StatusTransaksi.fromJson(Map<String, dynamic> json) =>
-      _$StatusTransaksiFromJson(json);
-  Map<String, dynamic> toJson() => _$StatusTransaksiToJson(this);
+  factory StatusTransaksi.fromJson(Map<String, dynamic> json) {
+    return StatusTransaksi(
+      idStatusTransaksi: json['id_status_transaksi']?.toString(),
+      status: json['status'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_status_transaksi': idStatusTransaksi,
+      'status': status,
+    };
+  }
 }

@@ -1,54 +1,72 @@
-import 'package:json_annotation/json_annotation.dart';
-import 'package:laris_jaya_gas/models/akun_model.dart';
-import 'package:laris_jaya_gas/models/perorangan_model.dart';
-import 'package:laris_jaya_gas/models/perusahaan_model.dart';
 import 'package:laris_jaya_gas/models/status_transaksi_model.dart';
+import 'package:laris_jaya_gas/models/detail_transaksi_model.dart';
 
-import 'detail_transaksi_model.dart';
-
-part 'transaksi_model.g.dart';
-
-@JsonSerializable()
 class Transaksi {
-  final String idTransaksi;
+  final String? idTransaksi;
   final String? idAkun;
   final String? idPerorangan;
   final String? idPerusahaan;
-  final DateTime tanggalTransaksi;
-  final String waktuTransaksi;
-  double jumlahDibayar;
-  final String metodePembayaran;
-  String idStatusTransaksi;
-  final DateTime? tanggalJatuhTempo;
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  Akun? akun;
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  Perorangan? perorangan;
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  Perusahaan? perusahaan;
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  StatusTransaksi? statusTransaksi;
-  List<DetailTransaksi>? detailTransaksis;
+  final String? tanggalTransaksi;
+  final String? waktuTransaksi;
+  final double? jumlahDibayar;
+  final String? metodePembayaran;
+  final String? idStatusTransaksi;
+  final String? tanggalJatuhTempo;
+  final StatusTransaksi? statusTransaksi;
+  final List<DetailTransaksi>? detailTransaksis;
 
   Transaksi({
-    required this.idTransaksi,
+    this.idTransaksi,
     this.idAkun,
     this.idPerorangan,
     this.idPerusahaan,
-    required this.tanggalTransaksi,
-    required this.waktuTransaksi,
-    required this.jumlahDibayar,
-    required this.metodePembayaran,
-    required this.idStatusTransaksi,
+    this.tanggalTransaksi,
+    this.waktuTransaksi,
+    this.jumlahDibayar,
+    this.metodePembayaran,
+    this.idStatusTransaksi,
     this.tanggalJatuhTempo,
-    this.akun,
-    this.perorangan,
-    this.perusahaan,
     this.statusTransaksi,
     this.detailTransaksis,
   });
 
-  factory Transaksi.fromJson(Map<String, dynamic> json) =>
-      _$TransaksiFromJson(json);
-  Map<String, dynamic> toJson() => _$TransaksiToJson(this);
+  factory Transaksi.fromJson(Map<String, dynamic> json) {
+    return Transaksi(
+      idTransaksi: json['id_transaksi']?.toString(),
+      idAkun: json['id_akun']?.toString(),
+      idPerorangan: json['id_perorangan']?.toString(),
+      idPerusahaan: json['id_perusahaan']?.toString(),
+      tanggalTransaksi: json['tanggal_transaksi'],
+      waktuTransaksi: json['waktu_transaksi'],
+      jumlahDibayar: (json['jumlah_dibayar'] != null) ? double.tryParse(json['jumlah_dibayar'].toString()) : null,
+      metodePembayaran: json['metode_pembayaran'],
+      idStatusTransaksi: json['id_status_transaksi']?.toString(),
+      tanggalJatuhTempo: json['tanggal_jatuh_tempo'],
+      statusTransaksi: json['status_transaksi'] != null
+          ? StatusTransaksi.fromJson(json['status_transaksi'])
+          : null,
+      detailTransaksis: json['detail_transaksis'] != null
+          ? (json['detail_transaksis'] as List<dynamic>)
+              .map((item) => DetailTransaksi.fromJson(item))
+              .toList()
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_transaksi': idTransaksi,
+      'id_akun': idAkun,
+      'id_perorangan': idPerorangan,
+      'id_perusahaan': idPerusahaan,
+      'tanggal_transaksi': tanggalTransaksi,
+      'waktu_transaksi': waktuTransaksi,
+      'jumlah_dibayar': jumlahDibayar,
+      'metode_pembayaran': metodePembayaran,
+      'id_status_transaksi': idStatusTransaksi,
+      'tanggal_jatuh_tempo': tanggalJatuhTempo,
+      'status_transaksi': statusTransaksi?.toJson(),
+      'detail_transaksis': detailTransaksis?.map((e) => e.toJson()).toList(),
+    };
+  }
 }

@@ -3,19 +3,23 @@
 // **************************************************************************
 
 Akun _$AkunFromJson(Map<String, dynamic> json) => Akun(
-      idAkun: json['idAkun'] as String,
-      idPerorangan: json['idPerorangan'] as String?,
+      idAkun: json['id_akun'] as String,
       email: json['email'] as String,
       password: json['password'] as String,
-      role: json['role'] as String? ?? 'pelanggan',
-      statusAktif: json['statusAktif'] as bool? ?? false,
+      role: json['role'] as String,
+      statusAktif: json['status_aktif'] as bool,
+      idPerorangan: json['id_perorangan'] as String?,
+      perorangan: json['perorangan'] == null
+          ? null
+          : Perorangan.fromJson(json['perorangan'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$AkunToJson(Akun instance) => <String, dynamic>{
-      'idAkun': instance.idAkun,
-      'idPerorangan': instance.idPerorangan,
+      'id_akun': instance.idAkun,
       'email': instance.email,
       'password': instance.password,
       'role': instance.role,
-      'statusAktif': instance.statusAktif,
+      'status_aktif': instance.statusAktif,
+      'id_perorangan': instance.idPerorangan,
+      'perorangan': instance.perorangan,
     };

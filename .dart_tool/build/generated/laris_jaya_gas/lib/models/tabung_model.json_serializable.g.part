@@ -1,0 +1,28 @@
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+Tabung _$TabungFromJson(Map<String, dynamic> json) => Tabung(
+      idTabung: json['id_tabung'] as String,
+      kodeTabung: json['kode_tabung'] as String,
+      idJenisTabung: json['id_jenis_tabung'] as String?,
+      idStatusTabung: json['id_status_tabung'] as String?,
+      jenisTabung: json['jenis_tabung'] == null
+          ? null
+          : JenisTabung.fromJson(json['jenis_tabung'] as Map<String, dynamic>),
+      statusTabung: json['status_tabung'] == null
+          ? null
+          : StatusTabung.fromJson(
+              json['status_tabung'] as Map<String, dynamic>),
+      qrCode: json['qr_code'] as String?,
+    );
+
+Map<String, dynamic> _$TabungToJson(Tabung instance) => <String, dynamic>{
+      'id_tabung': instance.idTabung,
+      'kode_tabung': instance.kodeTabung,
+      'id_jenis_tabung': instance.idJenisTabung,
+      'id_status_tabung': instance.idStatusTabung,
+      'jenis_tabung': instance.jenisTabung,
+      'status_tabung': instance.statusTabung,
+      'qr_code': instance.qrCode,
+    };

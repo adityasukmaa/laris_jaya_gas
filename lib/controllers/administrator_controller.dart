@@ -1,66 +1,141 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:laris_jaya_gas/controllers/auth_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
+import 'package:laris_jaya_gas/services/api_service.dart';
 
 class AdministratorController extends GetxController {
-  var pendingAccounts = <Map<String, dynamic>>[].obs;
-  var administratorProfile = <String, dynamic>{}.obs;
-  var statistics = <String, dynamic>{}.obs;
-  var isLoading = false.obs;
-
-  late SharedPreferences prefs;
-  late ApiService apiService;
+  final ApiService apiService = Get.find<ApiService>();
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
+  final administratorProfile = <String, dynamic>{}.obs;
+  final statistics = <String, dynamic>{}.obs;
+  final pendingAccounts = <Map<String, dynamic>>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    initialize();
+    fetchProfile();
+    fetchStatistics();
+    fetchPendingAccounts();
   }
 
-  Future<void> initialize() async {
-    prefs = await SharedPreferences.getInstance();
-    apiService = ApiService(prefs);
-    await fetchAdministratorData();
-  }
-
-  Future<void> fetchAdministratorData() async {
+  // Fetch admin profile
+  Future<void> fetchProfile() async {
     try {
       isLoading.value = true;
-      final profile = await apiService.getAdministratorProfile();
-      administratorProfile.value = profile;
-      final stats = await apiService.getStatistics();
-      statistics.value = stats;
-      final pending = await apiService.getPendingAccounts();
-      pendingAccounts.assignAll(pending.cast<Map<String, dynamic>>());
-    } catch (e) {
-      print('Fetch admin data error: $e');
-      Get.snackbar('Error', e.toString(),
-          backgroundColor: Colors.red, colorText: Colors.white);
-      if (e.toString().contains('Unauthorized') ||
-          e.toString().contains('Forbidden')) {
-        final authController = Get.find<AuthController>();
-        if (authController.isLoggedIn.value) {
-          authController.logout();
-        }
+      errorMessage.value = '';
+      
+      final response = await apiService.getProfile();
+      
+      if (response['success']) {
+        administratorProfile.value = response['data'] ?? {};
+      } else {
+        errorMessage.value = response['message'] ?? 'Gagal mengambil profil';
       }
+    } catch (e) {
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
+  // Fetch statistics
+  Future<void> fetchStatistics() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      
+      final response = await apiService.getStatistics();
+      
+      if (response['success']) {
+        statistics.value = response['data'] ?? {};
+      } else {
+        errorMessage.value = response['message'] ?? 'Gagal mengambil statistik';
+      }
+    } catch (e) {
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Fetch pending accounts
+  Future<void> fetchPendingAccounts() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      
+      final response = await apiService.getPendingAccounts();
+      
+      if (response['success']) {
+        pendingAccounts.value = List<Map<String, dynamic>>.from(response['data'] ?? []);
+      } else {
+        errorMessage.value = response['message'] ?? 'Gagal mengambil daftar akun pending';
+      }
+    } catch (e) {
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Confirm account
   Future<void> confirmAccount(String email) async {
     try {
       isLoading.value = true;
-      await apiService.confirmAccount(email);
-      pendingAccounts.removeWhere((account) => account['email'] == email);
-      Get.snackbar('Sukses', 'Akun berhasil dikonfirmasi',
-          backgroundColor: Colors.green, colorText: Colors.white);
+      errorMessage.value = '';
+      
+      final response = await apiService.confirmAccount(email);
+      
+      if (response['success']) {
+        Get.snackbar(
+          'Sukses',
+          response['message'],
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        // Refresh daftar akun pending
+        await fetchPendingAccounts();
+      } else {
+        errorMessage.value = response['message'] ?? 'Gagal mengkonfirmasi akun';
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     } catch (e) {
-      print('Confirm account error: $e');
-      Get.snackbar('Error', e.toString(),
-          backgroundColor: Colors.red, colorText: Colors.white);
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }

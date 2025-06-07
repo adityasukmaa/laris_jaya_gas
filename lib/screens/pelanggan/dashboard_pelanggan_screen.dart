@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:laris_jaya_gas/controllers/auth_controller.dart';
 import 'package:laris_jaya_gas/controllers/pelanggan_controller.dart';
+import 'package:laris_jaya_gas/models/detail_transaksi_model.dart';
 import 'package:laris_jaya_gas/models/tabung_model.dart';
 import 'package:laris_jaya_gas/models/transaksi_model.dart';
 import 'package:laris_jaya_gas/routes/app_routes.dart';
@@ -16,372 +17,365 @@ class DashboardPelangganScreen extends StatelessWidget {
     final AuthController authController = Get.find<AuthController>();
     final PelangganController controller = Get.find<PelangganController>();
 
-    return FutureBuilder(
-      future: authController.checkLoginStatus(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: AppColors.primaryBlue,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double paddingTop = screenHeight * 0.05;
+
+    return Obx(() {
+      // Cek status login dan role
+      if (!authController.isLoggedIn.value ||
+          authController.userRole.value != 'pelanggan') {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          print('Invalid login or role, redirecting to /login');
+          Get.offAllNamed(AppRoutes.login);
+        });
+        return const Scaffold(
+          body: Center(child: Text('Please login as a pelanggan')),
+        );
+      }
+
+      // Cek status loading atau akun null
+      if (controller.isLoading.value || controller.akun.value == null) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      // Cek error message
+      if (controller.errorMessage.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.snackbar(
+            'Error',
+            controller.errorMessage.value,
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
           );
-        }
+          controller.errorMessage.value = ''; // Reset error setelah ditampilkan
+        });
+      }
 
-        print(
-            'DashboardPelangganScreen: isLoggedIn=${authController.isLoggedIn.value}, '
-            'userRole=${authController.userRole.value}');
+      final akun = controller.akun.value!;
+      // final role = akun.role;
+      final perorangan = controller.perorangan.value;
+      final perusahaan = controller.perusahaan.value;
+      final namaDisplay = perorangan?.namaLengkap ??
+          perusahaan?.namaPerusahaan ??
+          akun.email ??
+          'Pelanggan';
 
-        if (!authController.isLoggedIn.value ||
-            authController.userRole.value != 'pelanggan') {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            print('Invalid login or role, redirecting to /login');
-            Get.offAllNamed(AppRoutes.login);
-          });
-          return const Scaffold(
-            body: Center(child: Text('You are not logged in as a customer')),
-          );
-        }
-
-        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          statusBarColor: AppColors.primaryBlue,
-          statusBarIconBrightness: Brightness.light,
-        ));
-
-        final double screenHeight = MediaQuery.of(context).size.height;
-        final double paddingTop = screenHeight * 0.05;
-
-        return Scaffold(
-          backgroundColor: Colors.grey[100],
-          body: Obx(() {
-            if (controller.isLoading.value || controller.akun.value == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final akun = controller.akun.value!;
-            final namaDisplay = akun.perorangan?.namaLengkap ??
-                akun.perorangan?.perusahaan?.namaPerusahaan ??
-                akun.email;
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.fromLTRB(16, paddingTop, 16, 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      return Scaffold(
+        backgroundColor: Colors.grey[100],
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header Section
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(16, paddingTop, 16, 16),
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryBlue,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Image.asset(
-                              'assets/images/logo.png',
-                              height: 30,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(Icons.error,
-                                    color: Colors.white);
-                              },
-                            ),
-                            PopupMenuButton(
-                              icon: const Icon(Icons.more_vert,
-                                  color: Colors.white),
-                              onSelected: (value) {
-                                if (value == 'logout') {
-                                  Get.defaultDialog(
-                                    title: '',
-                                    titlePadding: EdgeInsets.zero,
-                                    contentPadding: const EdgeInsets.fromLTRB(
-                                        16, 16, 16, 16),
-                                    backgroundColor: Colors.white,
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Apakah Anda yakin ingin keluar?',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: AppColors.secondary,
-                                            fontWeight: FontWeight.normal,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            ElevatedButton(
-                                              onPressed: () => Get.back(),
-                                              style: OutlinedButton.styleFrom(
-                                                backgroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 12,
-                                                        horizontal: 38),
-                                                side: BorderSide(
-                                                    color: AppColors.secondary),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                ),
-                                              ),
-                                              child: const Text(
-                                                'Tidak',
-                                                style: TextStyle(
-                                                  color: AppColors.secondary,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                Get.find<AuthController>()
-                                                    .logout();
-                                                Get.back();
-                                                Get.offAllNamed('/login');
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    AppColors.secondary,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 12,
-                                                        horizontal: 48),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                ),
-                                              ),
-                                              child: const Text(
-                                                'Ya',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                } else if (value == 'notification') {
-                                  Get.toNamed('/pelanggan/notifikasi');
-                                }
-                              },
-                              itemBuilder: (BuildContext context) {
-                                return [
-                                  const PopupMenuItem(
-                                    value: 'notification',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.notifications,
-                                            color: Colors.black54, size: 20),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          'Notifikasi',
-                                          style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'logout',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.logout,
-                                            color: Colors.black54, size: 20),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          'Logout',
-                                          style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ];
-                              },
-                            ),
-                          ],
+                        Image.asset(
+                          'assets/images/logo.png',
+                          height: 30,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.error, color: Colors.white);
+                          },
                         ),
-                        const SizedBox(height: 10),
-                        Center(
-                          child: Column(
-                            children: [
-                              const Text(
-                                'Halo,',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 22),
-                              ),
-                              Text(
-                                '$namaDisplay - Laris Jaya Gas',
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 16),
-                              ),
-                              const SizedBox(height: 16),
-                              Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 4,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '${controller.activeCylinders.length} Tabung Aktif',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              namaDisplay,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            Text(
-                                              akun.email,
-                                              style:
-                                                  const TextStyle(fontSize: 14),
-                                            ),
-                                            Text(
-                                              'Status: ${akun.statusAktif ? 'Aktif' : 'Non-Aktif'}',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: akun.statusAktif
-                                                    ? Colors.green
-                                                    : Colors.red,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                        PopupMenuButton<String>(
+                          icon:
+                              const Icon(Icons.more_vert, color: Colors.white),
+                          onSelected: (value) {
+                            if (value == 'logout') {
+                              Get.defaultDialog(
+                                title: '',
+                                titlePadding: EdgeInsets.zero,
+                                contentPadding: const EdgeInsets.all(16),
+                                backgroundColor: Colors.white,
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Apakah Anda yakin ingin keluar?',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: AppColors.secondary,
+                                        fontWeight: FontWeight.normal,
                                       ),
-                                      const Icon(Icons.person,
-                                          color: Colors.grey),
-                                    ],
-                                  ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed: () => Get.back(),
+                                          style: OutlinedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 12, horizontal: 38),
+                                            side: BorderSide(
+                                                color: AppColors.secondary),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Tidak',
+                                            style: TextStyle(
+                                              color: AppColors.secondary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            authController.logout();
+                                            Get.back();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                AppColors.secondary,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 12, horizontal: 48),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Ya',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GridView.count(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            _buildMenuCard(
-                              'Pinjam Tabung',
-                              Icons.add,
-                              '',
-                              Colors.white,
-                              () => Get.toNamed('/pelanggan/ajukan-peminjaman'),
-                            ),
-                            _buildMenuCard(
-                              'Isi Ulang',
-                              Icons.refresh,
-                              '',
-                              const LinearGradient(
-                                colors: [
-                                  AppColors.primaryBlue,
-                                  Color(0xFF001848)
+                              );
+                            } else if (value == 'notification') {
+                              Get.toNamed('/pelanggan/notifikasi');
+                            }
+                          },
+                          itemBuilder: (BuildContext context) => [
+                            const PopupMenuItem(
+                              value: 'notification',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.notifications,
+                                      color: Colors.black54, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Notifikasi',
+                                    style: TextStyle(
+                                        color: Colors.black87, fontSize: 14),
+                                  ),
                                 ],
                               ),
-                              () => Get.toNamed('/pelanggan/ajukan-isi-ulang'),
                             ),
-                            _buildMenuCard(
-                              'Tagihan',
-                              Icons.receipt,
-                              '',
-                              Colors.white,
-                              () => Get.toNamed('/pelanggan/tagihan'),
-                            ),
-                            _buildMenuCard(
-                              'Profil',
-                              Icons.person,
-                              '',
-                              Colors.white,
-                              () => Get.toNamed('/pelanggan/profil'),
+                            const PopupMenuItem(
+                              value: 'logout',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.logout,
+                                      color: Colors.black54, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Logout',
+                                    style: TextStyle(
+                                        color: Colors.black87, fontSize: 14),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Tabung Aktif',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        _buildCylinderList(controller),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Riwayat Transaksi',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        _buildTransactionHistory(controller),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Halo,',
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          Text(
+                            'Pelanggan - Laris Jaya Gas',
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 16),
+                          ),
+                          const SizedBox(height: 16),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${controller.activeCylinders.length} Tabung Aktif',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          namaDisplay,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          akun.email ?? 'Unknown',
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                        Text(
+                                          'Status: ${akun.statusAktif == true ? 'Aktif' : 'Non-Aktif'}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: akun.statusAktif == true
+                                                ? Colors.green
+                                                : Colors.red,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.person, color: Colors.grey),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          }),
-          bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: AppColors.primaryBlue,
-            unselectedItemColor: Colors.grey,
-            currentIndex: 0,
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.local_shipping), label: 'Peminjaman'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.refresh), label: 'Isi Ulang'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt), label: 'Tagihan'),
+              // Menu and Content Section
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildMenuCard(
+                          'Pinjam Tabung',
+                          Icons.add,
+                          '',
+                          Colors.white,
+                          () => Get.toNamed('/pelanggan/ajukan-peminjaman'),
+                        ),
+                        _buildMenuCard(
+                          'Isi Ulang',
+                          Icons.refresh,
+                          '',
+                          const LinearGradient(
+                            colors: [AppColors.primaryBlue, Color(0xFF001848)],
+                          ),
+                          () => Get.toNamed('/pelanggan/ajukan-isi-ulang'),
+                        ),
+                        _buildMenuCard(
+                          'Tagihan',
+                          Icons.receipt,
+                          '',
+                          Colors.white,
+                          () => Get.toNamed('/pelanggan/tagihan'),
+                        ),
+                        _buildMenuCard(
+                          'Profil',
+                          Icons.person,
+                          '',
+                          Colors.white,
+                          () => Get.toNamed('/pelanggan/profil'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Tabung Aktif',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCylinderList(controller),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Riwayat Transaksi',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildTransactionHistory(controller),
+                  ],
+                ),
+              ),
             ],
-            onTap: (index) {
-              switch (index) {
-                case 0:
-                  break;
-                case 1:
-                  Get.toNamed('/pelanggan/ajukan-peminjaman');
-                  break;
-                case 2:
-                  Get.toNamed('/pelanggan/ajukan-isi-ulang');
-                  break;
-                case 3:
-                  Get.toNamed('/pelanggan/tagihan');
-                  break;
-              }
-            },
           ),
-        );
-      },
-    );
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: AppColors.primaryBlue,
+          unselectedItemColor: Colors.grey,
+          currentIndex: 0,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.local_shipping), label: 'Peminjaman'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.refresh), label: 'Isi Ulang'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.receipt), label: 'Tagihan'),
+          ],
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                break;
+              case 1:
+                Get.toNamed('/pelanggan/ajukan-peminjaman');
+                break;
+              case 2:
+                Get.toNamed('/pelanggan/ajukan-isi-ulang');
+                break;
+              case 3:
+                Get.toNamed('/pelanggan/tagihan');
+                break;
+            }
+          },
+        ),
+      );
+    });
   }
 
   Widget _buildMenuCard(
@@ -400,7 +394,7 @@ class DashboardPelangganScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withAlpha((0.1 * 255).toInt()),
               blurRadius: 6,
               offset: const Offset(0, 4),
             ),
@@ -459,7 +453,7 @@ class DashboardPelangganScreen extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
                   leading: const Icon(Icons.propane_tank),
-                  title: Text('Tabung: ${cylinder.kodeTabung}'),
+                  title: Text('Tabung: ${cylinder.kodeTabung ?? 'Unknown'}'),
                   subtitle: Text(
                       'Jenis: ${cylinder.jenisTabung?.namaJenis ?? 'Unknown'}'),
                   trailing: Text(
@@ -470,8 +464,8 @@ class DashboardPelangganScreen extends StatelessWidget {
                           : Colors.grey,
                     ),
                   ),
-                  onTap: () =>
-                      controller.viewCylinderDetails(cylinder.idTabung ?? ''),
+                  onTap: () => controller
+                      .viewCylinderDetails(cylinder.idTabung?.toString() ?? ''),
                 ),
               );
             },
@@ -491,27 +485,32 @@ class DashboardPelangganScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final Transaksi transaction =
                   controller.transactionHistory[index];
-              final detail = transaction.detailTransaksis?.isNotEmpty == true
-                  ? transaction.detailTransaksis![0]
-                  : null;
+              final DetailTransaksi? detail =
+                  transaction.detailTransaksis?.isNotEmpty == true
+                      ? transaction.detailTransaksis![0]
+                      : null;
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
                   leading: const Icon(Icons.receipt),
                   title: Text(
-                      '${detail?.jenisTransaksi?.namaJenisTransaksi ?? 'Transaksi'} - ${transaction.idTransaksi}'),
-                  subtitle: Text('Tanggal: ${transaction.tanggalTransaksi}'),
+                    '${detail?.jenisTransaksi?.namaJenisTransaksi ?? 'Transaksi'} - ${transaction.idTransaksi ?? 'Unknown'}',
+                  ),
+                  subtitle: Text(
+                      'Tanggal: ${transaction.tanggalTransaksi ?? 'Unknown'}'),
                   trailing: Text(
                     transaction.statusTransaksi?.status ?? 'Unknown',
                     style: TextStyle(
-                      color: transaction.statusTransaksi?.status == 'success'
-                          ? Colors.green
-                          : Colors.grey,
+                      color:
+                          transaction.statusTransaksi?.status?.toLowerCase() ==
+                                  'success'
+                              ? Colors.green
+                              : Colors.grey,
                     ),
                   ),
-                  onTap: () => controller
-                      .viewTransactionDetails(transaction.idTransaksi),
+                  onTap: () => controller.viewTransactionDetails(
+                      transaction.idTransaksi?.toString() ?? ''),
                 ),
               );
             },

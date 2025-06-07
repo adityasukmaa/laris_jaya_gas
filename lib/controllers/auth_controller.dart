@@ -1,131 +1,130 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:laris_jaya_gas/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/akun_model.dart';
-import '../services/api_service.dart';
 
 class AuthController extends GetxController {
-  var isLoggedIn = false.obs;
-  var akunId = ''.obs;
-  var userRole = 'pelanggan'.obs;
-  var isLoading = false.obs;
-  var errorMessage = ''.obs;
-  var fieldErrors = <String, String>{}.obs;
-  var akun = Rxn<Akun>();
+  final ApiService apiService = Get.find<ApiService>();
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
+  final fieldErrors = <String, String>{}.obs;
+  final isLoggedIn = false.obs;
+  final userRole = ''.obs;
   late SharedPreferences prefs;
-  late ApiService apiService;
 
   @override
   void onInit() {
     super.onInit();
-    initialize();
-  }
-
-  Future<void> initialize() async {
-    prefs = await SharedPreferences.getInstance();
-    apiService = ApiService(prefs);
-    await checkLoginStatus();
+    checkLoginStatus();
   }
 
   Future<void> checkLoginStatus() async {
-    try {
-      final token = prefs.getString('auth_token');
-      final role = prefs.getString('user_role') ?? 'pelanggan';
-      final storedAkunId = prefs.getString('id_akun') ?? '';
-      if (token != null && token.isNotEmpty && storedAkunId.isNotEmpty) {
-        // akun.value = await apiService.getAkun(storedAkunId);
-        if (akun.value != null) {
-          isLoggedIn.value = true;
-          userRole.value = role;
-          akunId.value = storedAkunId;
-        } else {
-          await logout();
-        }
-      }
-    } catch (e) {
-      print('Check login error: $e');
-      await logout();
+    prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final role = prefs.getString('user_role');
+    if (token != null && role != null) {
+      isLoggedIn.value = true;
+      userRole.value = role;
     }
   }
 
   Future<void> login(String email, String password) async {
-    isLoading.value = true;
-    errorMessage.value = '';
-    fieldErrors.clear();
-
     try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      fieldErrors.clear();
+
+      print('Mengirim login request: email=$email'); // Tambahkan log
       final response = await apiService.login(email, password);
-      print('Login response: $response');
-      if (response['success'] == true && response['data'] != null) {
-        final data = response['data'];
-        final akunIdValue = data['id_akun']?.toString();
-        if (akunIdValue == null || akunIdValue.isEmpty) {
-          throw 'ID akun tidak ditemukan dalam respons login';
-        }
-        final token = response['token'] ?? '';
-        if (token.isEmpty) {
-          throw 'Token tidak ditemukan dalam respons login';
-        }
+      print('Respons login: $response'); // Tambahkan log
+
+      if (response['success']) {
         isLoggedIn.value = true;
-        userRole.value = data['role'] ?? 'pelanggan';
-        akunId.value = akunIdValue;
-        await prefs.setString('auth_token', token);
-        await prefs.setString('user_role', userRole.value);
-        await prefs.setString('id_akun', akunIdValue);
-        print('Token after login: $token');
-        akun.value = Akun(
-          idAkun: akunIdValue,
-          idPerorangan: null,
-          email: data['email'] ?? email,
-          password: '',
-          role: userRole.value,
-          statusAktif: true,
-          perorangan: null,
+        userRole.value = response['data']['role'];
+        print('Login sukses, role: ${userRole.value}'); // Tambahkan log
+        Get.offAllNamed(
+          userRole.value == 'administrator'
+              ? '/administrator/dashboard'
+              : '/pelanggan/dashboard',
         );
-        print('Login successful: id_akun=$akunIdValue, role=${userRole.value}');
-        Get.offAllNamed(userRole.value == 'administrator'
-            ? '/administrator/dashboard'
-            : '/pelanggan/dashboard');
       } else {
         errorMessage.value = response['message'] ?? 'Login gagal';
-        Get.snackbar('Error', errorMessage.value,
-            backgroundColor: Colors.red, colorText: Colors.white);
+        if (response['errors'] != null) {
+          response['errors'].forEach((key, value) {
+            fieldErrors[key] = value[0];
+          });
+        }
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
     } catch (e) {
-      print('Login error: $e');
-      errorMessage.value = e.toString();
-      Get.snackbar('Error', errorMessage.value,
-          backgroundColor: Colors.red, colorText: Colors.white);
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      print('Login error: ${errorMessage.value}'); // Tambahkan log
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
   Future<void> register(Map<String, dynamic> data) async {
-    isLoading.value = true;
-    errorMessage.value = '';
-    fieldErrors.clear();
-
     try {
-      final response = await apiService.register(data);
-      if (response['success'] == true) {
-        Get.snackbar('Sukses', response['message'] ?? 'Pendaftaran berhasil',
-            backgroundColor: Colors.green, colorText: Colors.white);
-        Get.toNamed('/login');
+      isLoading.value = true;
+      errorMessage.value = '';
+      fieldErrors.clear();
+
+      final response = await apiService.register(
+        email: data['email'],
+        password: data['password'],
+        passwordConfirmation: data['password_confirmation'],
+      );
+
+      if (response['success']) {
+        Get.snackbar(
+          'Sukses',
+          response['message'],
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        Get.offNamed('/login');
       } else {
-        throw response['message'] ?? 'Pendaftaran gagal';
+        // Ambil hanya message untuk ditampilkan
+        errorMessage.value = response['message'] ?? 'Registrasi gagal';
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        if (response['errors'] != null) {
+          response['errors'].forEach((key, value) {
+            fieldErrors[key] = value[0];
+          });
+        }
       }
     } catch (e) {
-      print('Register error: $e');
-      if (e is Map<String, dynamic>) {
-        e.forEach((key, value) {
-          fieldErrors[key] = value is List ? value.first : value.toString();
-        });
-      } else {
-        errorMessage.value = e.toString();
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      if (e.toString().contains('Validation errors')) {
+        final errors =
+            (e as dynamic).response['errors'] as Map<String, dynamic>?;
+        if (errors != null) {
+          errors.forEach((key, value) {
+            fieldErrors[key] = (value as List).first;
+          });
+        }
       }
-      Get.snackbar('Error', fieldErrors['general'] ?? errorMessage.value,
-          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -133,17 +132,21 @@ class AuthController extends GetxController {
 
   Future<void> logout() async {
     try {
+      isLoading.value = true;
       await apiService.logout();
       isLoggedIn.value = false;
       userRole.value = '';
-      akunId.value = '';
       Get.offAllNamed('/');
-      print('Logout successful');
     } catch (e) {
-      print('Logout error: $e');
-      errorMessage.value = 'Gagal logout: $e';
-      Get.snackbar('Error', errorMessage.value,
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+        'Error',
+        e.toString().replaceFirst('Exception: ', ''),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:laris_jaya_gas/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/auth_controller.dart';
 import 'routes/app_routes.dart';
@@ -9,6 +10,7 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
 
   // Only initialize AuthController
+  Get.put(ApiService());
   Get.put(AuthController()..prefs = prefs);
 
   final initialRoute = prefs.getString('auth_token') != null &&

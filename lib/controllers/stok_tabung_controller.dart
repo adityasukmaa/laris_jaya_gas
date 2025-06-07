@@ -1,52 +1,103 @@
-import 'package:get/get.dart';
-import 'package:laris_jaya_gas/models/tabung_model.dart';
-import '../../utils/dummy_data.dart';
+// import 'package:flutter/material.dart';
+// import 'package:get/get.dart';
+// import 'package:laris_jaya_gas/models/tabung_model.dart';
+// import 'package:laris_jaya_gas/services/api_service.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
-class StokTabungController extends GetxController {
-  var selectedJenis = 'Semua'.obs;
-  var selectedStatus = 'Semua'.obs;
-  var filteredTabungList = <Tabung>[].obs;
+// class StokTabungController extends GetxController {
+//   var selectedJenis = 'Semua'.obs;
+//   var selectedStatus = 'Semua'.obs;
+//   var filteredTabungList = <Tabung>[].obs;
+//   var isLoading = false.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    applyFilter(); // Terapkan filter awal saat inisialisasi
-  }
+//   late ApiService apiService;
 
-  void applyFilter() {
-    var tempList = List<Tabung>.from(DummyData.tabungList);
+//   @override
+//   void onInit() {
+//     super.onInit();
+//     initializeApiService();
+//   }
 
-    if (selectedJenis.value.isNotEmpty && selectedJenis.value != 'Semua') {
-      tempList = tempList
-          .where(
-              (tabung) => tabung.jenisTabung?.namaJenis == selectedJenis.value)
-          .toList();
-    }
+//   Future<void> initializeApiService() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     apiService = ApiService(prefs);
+//     await fetchTabungList();
+//   }
 
-    if (selectedStatus.value.isNotEmpty && selectedStatus.value != 'Semua') {
-      tempList = tempList
-          .where((tabung) =>
-              tabung.statusTabung?.statusTabung == selectedStatus.value)
-          .toList();
-    }
+//   Future<void> fetchTabungList() async {
+//     try {
+//       isLoading.value = true;
+//       final tabungData = await apiService.getTabungs();
+//       filteredTabungList.value =
+//           tabungData.map((json) => Tabung.fromJson(json)).toList();
+//       applyFilter();
+//     } catch (e) {
+//       Get.snackbar(
+//         'Error',
+//         'Gagal mengambil data tabung: $e',
+//         backgroundColor: Colors.red,
+//         colorText: Colors.white,
+//       );
+//     } finally {
+//       isLoading.value = false;
+//     }
+//   }
 
-    filteredTabungList.value = tempList;
-  }
+//   void applyFilter() {
+//     var tempList = List<Tabung>.from(filteredTabungList);
 
-  // Metode untuk menyegarkan daftar tabung dari DummyData
-  void refreshTabungList() {
-    applyFilter();
-  }
+//     print(
+//         'Applying filter: Jenis=${selectedJenis.value}, Status=${selectedStatus.value}');
+//     print('Initial tabung count: ${tempList.length}');
 
-  // Hitung total tabung berdasarkan status
-  int get totalTabungByStatus {
-    return filteredTabungList.length;
-  }
+//     if (selectedJenis.value.isNotEmpty && selectedJenis.value != 'Semua') {
+//       tempList = tempList
+//           .where((tabung) =>
+//               tabung.jenisTabung?.namaJenis == selectedJenis.value &&
+//               tabung.jenisTabung != null)
+//           .toList();
+//       print('After jenis filter: ${tempList.length}');
+//     }
 
-  // Hitung total tabung berdasarkan jenis
-  int get totalTabungByJenis {
-    return filteredTabungList
-        .where((tabung) => tabung.jenisTabung?.namaJenis == selectedJenis.value)
-        .length;
-  }
-}
+//     if (selectedStatus.value.isNotEmpty && selectedStatus.value != 'Semua') {
+//       tempList = tempList
+//           .where((tabung) =>
+//               tabung.statusTabung?.statusTabung == selectedStatus.value &&
+//               tabung.statusTabung != null)
+//           .toList();
+//       print('After status filter: ${tempList.length}');
+//     }
+
+//     filteredTabungList.value = tempList;
+//     print('Final filtered tabung count: ${filteredTabungList.length}');
+
+//     if (filteredTabungList.isEmpty) {
+//       Get.snackbar(
+//         'Info',
+//         'Tidak ada tabung yang sesuai dengan filter.',
+//         backgroundColor: Colors.orange,
+//         colorText: Colors.white,
+//         snackPosition: SnackPosition.TOP,
+//       );
+//     }
+//   }
+
+//   void refreshTabungList() {
+//     fetchTabungList();
+//   }
+
+//   int get totalTabungByStatus {
+//     return filteredTabungList.length;
+//   }
+
+//   int get totalTabungByJenis {
+//     if (selectedJenis.value == 'Semua') {
+//       return filteredTabungList.length;
+//     }
+//     return filteredTabungList
+//         .where((tabung) =>
+//             tabung.jenisTabung?.namaJenis == selectedJenis.value &&
+//             tabung.jenisTabung != null)
+//         .length;
+//   }
+// }

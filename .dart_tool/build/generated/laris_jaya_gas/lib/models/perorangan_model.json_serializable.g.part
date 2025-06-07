@@ -3,20 +3,24 @@
 // **************************************************************************
 
 Perorangan _$PeroranganFromJson(Map<String, dynamic> json) => Perorangan(
-      idPerorangan: json['idPerorangan'] as String,
-      namaLengkap: json['namaLengkap'] as String,
+      idPerorangan: json['id_perorangan'] as String,
+      namaLengkap: json['nama_lengkap'] as String,
       nik: json['nik'] as String,
-      noTelepon: json['noTelepon'] as String,
+      noTelepon: json['no_telepon'] as String,
       alamat: json['alamat'] as String,
-      idPerusahaan: json['idPerusahaan'] as String?,
+      idPerusahaan: json['id_perusahaan'] as String?,
+      perusahaan: json['perusahaan'] == null
+          ? null
+          : Perusahaan.fromJson(json['perusahaan'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$PeroranganToJson(Perorangan instance) =>
     <String, dynamic>{
-      'idPerorangan': instance.idPerorangan,
-      'namaLengkap': instance.namaLengkap,
+      'id_perorangan': instance.idPerorangan,
+      'nama_lengkap': instance.namaLengkap,
       'nik': instance.nik,
-      'noTelepon': instance.noTelepon,
+      'no_telepon': instance.noTelepon,
       'alamat': instance.alamat,
-      'idPerusahaan': instance.idPerusahaan,
+      'id_perusahaan': instance.idPerusahaan,
+      'perusahaan': instance.perusahaan,
     };

@@ -3,16 +3,16 @@
 // **************************************************************************
 
 JenisTabung _$JenisTabungFromJson(Map<String, dynamic> json) => JenisTabung(
-      idJenisTabung: json['idJenisTabung'] as String,
-      kodeJenis: json['kodeJenis'] as String,
-      namaJenis: json['namaJenis'] as String,
+      idJenisTabung: json['id_jenis_tabung'] as String,
+      kodeJenis: json['kode_jenis'] as String,
+      namaJenis: json['nama_jenis'] as String,
       harga: (json['harga'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$JenisTabungToJson(JenisTabung instance) =>
     <String, dynamic>{
-      'idJenisTabung': instance.idJenisTabung,
-      'kodeJenis': instance.kodeJenis,
-      'namaJenis': instance.namaJenis,
+      'id_jenis_tabung': instance.idJenisTabung,
+      'kode_jenis': instance.kodeJenis,
+      'nama_jenis': instance.namaJenis,
       'harga': instance.harga,
     };

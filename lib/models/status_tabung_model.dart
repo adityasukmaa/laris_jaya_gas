@@ -1,18 +1,23 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'status_tabung_model.g.dart';
-
-@JsonSerializable()
 class StatusTabung {
-  final String idStatusTabung;
-  final String statusTabung;
+  final int? idStatusTabung;
+  final String? statusTabung;
 
   StatusTabung({
-    required this.idStatusTabung,
-    required this.statusTabung,
+    this.idStatusTabung,
+    this.statusTabung,
   });
 
-  factory StatusTabung.fromJson(Map<String, dynamic> json) =>
-      _$StatusTabungFromJson(json);
-  Map<String, dynamic> toJson() => _$StatusTabungToJson(this);
+  factory StatusTabung.fromJson(Map<String, dynamic> json) {
+    return StatusTabung(
+      idStatusTabung: json['id_status_tabung'],
+      statusTabung: json['status_tabung'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_status_tabung': idStatusTabung,
+      'status_tabung': statusTabung,
+    };
+  }
 }

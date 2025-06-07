@@ -152,6 +152,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             return null;
           },
         ),
+        Obx(() {
+          // Jika ada pesan error global (misal: email sudah terdaftar), tampilkan di atas field
+          final globalError = authController.errorMessage.value;
+          if (globalError.isNotEmpty) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                globalError,
+                style: const TextStyle(color: Colors.red, fontSize: 13),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }),
         Obx(() => authController.fieldErrors['email'] != null
             ? Padding(
                 padding: const EdgeInsets.only(top: 8),

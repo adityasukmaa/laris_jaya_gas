@@ -1,24 +1,35 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'notifikasi_template_model.g.dart';
-
-@JsonSerializable()
 class NotifikasiTemplate {
-  final String idTemplate;
-  final String namaTemplate;
-  final int hariSet;
-  final String judul;
-  final String isi;
+  final int? idTemplate;
+  final String? namaTemplate;
+  final int? hariSet;
+  final String? judul;
+  final String? isi;
 
   NotifikasiTemplate({
-    required this.idTemplate,
-    required this.namaTemplate,
-    required this.hariSet,
-    required this.judul,
-    required this.isi,
+    this.idTemplate,
+    this.namaTemplate,
+    this.hariSet,
+    this.judul,
+    this.isi,
   });
 
-  factory NotifikasiTemplate.fromJson(Map<String, dynamic> json) =>
-      _$NotifikasiTemplateFromJson(json);
-  Map<String, dynamic> toJson() => _$NotifikasiTemplateToJson(this);
+  factory NotifikasiTemplate.fromJson(Map<String, dynamic> json) {
+    return NotifikasiTemplate(
+      idTemplate: json['id_template'],
+      namaTemplate: json['nama_template'],
+      hariSet: json['hari_set'],
+      judul: json['judul'],
+      isi: json['isi'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_template': idTemplate,
+      'nama_template': namaTemplate,
+      'hari_set': hariSet,
+      'judul': judul,
+      'isi': isi,
+    };
+  }
 }

@@ -1,29 +1,39 @@
-import 'package:json_annotation/json_annotation.dart';
-import 'package:laris_jaya_gas/models/perorangan_model.dart';
-
-part 'akun_model.g.dart';
-
-@JsonSerializable()
 class Akun {
-  final String idAkun;
-  final String? idPerorangan;
-  final String email;
-  final String password;
-  final String role;
-  final bool statusAktif;
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  Perorangan? perorangan;
+  final int? idAkun;
+  final int? idPerorangan;
+  final String? email;
+  final String? password;
+  final String? role;
+  final bool? statusAktif;
 
   Akun({
-    required this.idAkun,
+    this.idAkun,
     this.idPerorangan,
-    required this.email,
-    required this.password,
-    this.role = 'pelanggan',
-    this.statusAktif = false,
-    this.perorangan,
+    this.email,
+    this.password,
+    this.role,
+    this.statusAktif,
   });
 
-  factory Akun.fromJson(Map<String, dynamic> json) => _$AkunFromJson(json);
-  Map<String, dynamic> toJson() => _$AkunToJson(this);
+  factory Akun.fromJson(Map<String, dynamic> json) {
+    return Akun(
+      idAkun: json['id_akun'],
+      idPerorangan: json['id_perorangan'],
+      email: json['email'],
+      password: json['password'],
+      role: json['role'],
+      statusAktif: json['status_aktif'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_akun': idAkun,
+      'id_perorangan': idPerorangan,
+      'email': email,
+      'password': password,
+      'role': role,
+      'status_aktif': statusAktif,
+    };
+  }
 }

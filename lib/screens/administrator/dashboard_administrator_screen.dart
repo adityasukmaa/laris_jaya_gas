@@ -34,22 +34,46 @@ class DashboardAdministratorScreen extends StatelessWidget {
     return Obx(() {
       // Tampilkan loading saat data diambil
       if (administratorController.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
       final profile = administratorController.administratorProfile;
       final statistics = administratorController.statistics;
 
       // Default values jika data belum dimuat
-      final String namaLengkap = profile['nama_lengkap'] ?? 'Administrator';
-      final String noTelepon = profile['no_telepon'] ?? 'Tidak tersedia';
-      final String email = profile['email'] ?? 'admin@example.com';
+      final String namaLengkap =
+          profile.containsKey('nama_lengkap') && profile['nama_lengkap'] != null
+              ? profile['nama_lengkap']
+              : 'Administrator';
+      final String noTelepon =
+          profile.containsKey('no_telepon') && profile['no_telepon'] != null
+              ? profile['no_telepon']
+              : 'Tidak tersedia';
+      final String email =
+          profile.containsKey('email') && profile['email'] != null
+              ? profile['email']
+              : 'admin@example.com';
       final int totalTransaksiBerjalan =
-          statistics['total_transaksi_berjalan'] ?? 0;
-      final int transactionCount = statistics['total_transaksi'] ?? 0;
-      final int stockCount = statistics['stok_tabung'] ?? 0;
-      final int historyCount = statistics['riwayat_transaksi'] ?? 0;
-      final int customerCount = statistics['jumlah_pelanggan'] ?? 0;
+          statistics.containsKey('total_transaksi_berjalan') &&
+                  statistics['total_transaksi_berjalan'] != null
+              ? statistics['total_transaksi_berjalan']
+              : 0;
+      final int transactionCount = statistics.containsKey('total_transaksi') &&
+              statistics['total_transaksi'] != null
+          ? statistics['total_transaksi']
+          : 0;
+      final int stockCount = statistics.containsKey('stok_tabung') &&
+              statistics['stok_tabung'] != null
+          ? statistics['stok_tabung']
+          : 0;
+      final int historyCount = statistics.containsKey('riwayat_transaksi') &&
+              statistics['riwayat_transaksi'] != null
+          ? statistics['riwayat_transaksi']
+          : 0;
+      final int customerCount = statistics.containsKey('jumlah_pelanggan') &&
+              statistics['jumlah_pelanggan'] != null
+          ? statistics['jumlah_pelanggan']
+          : 0;
 
       return Scaffold(
         backgroundColor: Colors.grey[100],
@@ -379,7 +403,7 @@ class DashboardAdministratorScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withAlpha((0.1 * 255).toInt()),
               blurRadius: 6,
               offset: const Offset(0, 4),
             ),

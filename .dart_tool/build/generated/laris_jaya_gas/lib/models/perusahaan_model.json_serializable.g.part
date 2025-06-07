@@ -3,16 +3,16 @@
 // **************************************************************************
 
 Perusahaan _$PerusahaanFromJson(Map<String, dynamic> json) => Perusahaan(
-      idPerusahaan: json['idPerusahaan'] as String,
-      namaPerusahaan: json['namaPerusahaan'] as String,
-      alamatPerusahaan: json['alamatPerusahaan'] as String,
-      emailPerusahaan: json['emailPerusahaan'] as String,
+      idPerusahaan: json['id_perusahaan'] as String,
+      namaPerusahaan: json['nama_perusahaan'] as String,
+      alamatPerusahaan: json['alamat_perusahaan'] as String,
+      emailPerusahaan: json['email_perusahaan'] as String,
     );
 
 Map<String, dynamic> _$PerusahaanToJson(Perusahaan instance) =>
     <String, dynamic>{
-      'idPerusahaan': instance.idPerusahaan,
-      'namaPerusahaan': instance.namaPerusahaan,
-      'alamatPerusahaan': instance.alamatPerusahaan,
-      'emailPerusahaan': instance.emailPerusahaan,
+      'id_perusahaan': instance.idPerusahaan,
+      'nama_perusahaan': instance.namaPerusahaan,
+      'alamat_perusahaan': instance.alamatPerusahaan,
+      'email_perusahaan': instance.emailPerusahaan,
     };

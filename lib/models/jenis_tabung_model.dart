@@ -1,22 +1,33 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'jenis_tabung_model.g.dart';
-
-@JsonSerializable()
 class JenisTabung {
-  final String idJenisTabung;
-  final String kodeJenis;
-  final String namaJenis;
-  final double harga;
+  final int? idJenisTabung;
+  final String? kodeJenis;
+  final String? namaJenis;
+  final double? harga;
 
   JenisTabung({
-    required this.idJenisTabung,
-    required this.kodeJenis,
-    required this.namaJenis,
-    required this.harga,
+    this.idJenisTabung,
+    this.kodeJenis,
+    this.namaJenis,
+    this.harga,
   });
 
-  factory JenisTabung.fromJson(Map<String, dynamic> json) =>
-      _$JenisTabungFromJson(json);
-  Map<String, dynamic> toJson() => _$JenisTabungToJson(this);
+  factory JenisTabung.fromJson(Map<String, dynamic> json) {
+    return JenisTabung(
+      idJenisTabung: json['id_jenis_tabung'],
+      kodeJenis: json['kode_jenis'],
+      namaJenis: json['nama_jenis'],
+      harga: (json['harga'] != null)
+          ? double.tryParse(json['harga'].toString())
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_jenis_tabung': idJenisTabung,
+      'kode_jenis': kodeJenis,
+      'nama_jenis': namaJenis,
+      'harga': harga,
+    };
+  }
 }

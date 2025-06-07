@@ -3,33 +3,19 @@
 // **************************************************************************
 
 Transaksi _$TransaksiFromJson(Map<String, dynamic> json) => Transaksi(
-      idTransaksi: json['idTransaksi'] as String,
-      idAkun: json['idAkun'] as String?,
-      idPerorangan: json['idPerorangan'] as String?,
-      idPerusahaan: json['idPerusahaan'] as String?,
-      tanggalTransaksi: DateTime.parse(json['tanggalTransaksi'] as String),
-      waktuTransaksi: json['waktuTransaksi'] as String,
-      jumlahDibayar: (json['jumlahDibayar'] as num).toDouble(),
-      metodePembayaran: json['metodePembayaran'] as String,
-      idStatusTransaksi: json['idStatusTransaksi'] as String,
-      tanggalJatuhTempo: json['tanggalJatuhTempo'] == null
-          ? null
-          : DateTime.parse(json['tanggalJatuhTempo'] as String),
-      detailTransaksis: (json['detailTransaksis'] as List<dynamic>?)
-          ?.map((e) => DetailTransaksi.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      idTransaksi: json['id_transaksi'] as String,
+      idAkun: json['id_akun'] as String,
+      jenisTransaksi: json['jenis_transaksi'] as String,
+      tanggalTransaksi: json['tanggal_transaksi'] as String,
+      totalHarga: (json['total_harga'] as num).toDouble(),
+      statusTransaksi: json['status_transaksi'] as String,
     );
 
 Map<String, dynamic> _$TransaksiToJson(Transaksi instance) => <String, dynamic>{
-      'idTransaksi': instance.idTransaksi,
-      'idAkun': instance.idAkun,
-      'idPerorangan': instance.idPerorangan,
-      'idPerusahaan': instance.idPerusahaan,
-      'tanggalTransaksi': instance.tanggalTransaksi.toIso8601String(),
-      'waktuTransaksi': instance.waktuTransaksi,
-      'jumlahDibayar': instance.jumlahDibayar,
-      'metodePembayaran': instance.metodePembayaran,
-      'idStatusTransaksi': instance.idStatusTransaksi,
-      'tanggalJatuhTempo': instance.tanggalJatuhTempo?.toIso8601String(),
-      'detailTransaksis': instance.detailTransaksis,
+      'id_transaksi': instance.idTransaksi,
+      'id_akun': instance.idAkun,
+      'jenis_transaksi': instance.jenisTransaksi,
+      'tanggal_transaksi': instance.tanggalTransaksi,
+      'total_harga': instance.totalHarga,
+      'status_transaksi': instance.statusTransaksi,
     };

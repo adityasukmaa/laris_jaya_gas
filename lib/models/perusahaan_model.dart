@@ -1,21 +1,31 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'perusahaan_model.g.dart';
-
-@JsonSerializable()
 class Perusahaan {
-  final String idPerusahaan;
-  final String namaPerusahaan;
-  final String alamatPerusahaan;
-  final String emailPerusahaan;
+  final int? idPerusahaan;
+  final String? namaPerusahaan;
+  final String? alamatPerusahaan;
+  final String? emailPerusahaan;
 
   Perusahaan({
-    required this.idPerusahaan,
-    required this.namaPerusahaan,
-    required this.alamatPerusahaan,
-    required this.emailPerusahaan,
+    this.idPerusahaan,
+    this.namaPerusahaan,
+    this.alamatPerusahaan,
+    this.emailPerusahaan,
   });
 
-  factory Perusahaan.fromJson(Map<String, dynamic> json) => _$PerusahaanFromJson(json);
-  Map<String, dynamic> toJson() => _$PerusahaanToJson(this);
+  factory Perusahaan.fromJson(Map<String, dynamic> json) {
+    return Perusahaan(
+      idPerusahaan: json['id_perusahaan'],
+      namaPerusahaan: json['nama_perusahaan'],
+      alamatPerusahaan: json['alamat_perusahaan'],
+      emailPerusahaan: json['email_perusahaan'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_perusahaan': idPerusahaan,
+      'nama_perusahaan': namaPerusahaan,
+      'alamat_perusahaan': alamatPerusahaan,
+      'email_perusahaan': emailPerusahaan,
+    };
+  }
 }

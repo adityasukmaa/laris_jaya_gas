@@ -3,20 +3,20 @@
 // **************************************************************************
 
 Notifikasi _$NotifikasiFromJson(Map<String, dynamic> json) => Notifikasi(
-      idNotifikasi: json['idNotifikasi'] as String,
-      idTagihan: json['idTagihan'] as String,
-      idTemplate: json['idTemplate'] as String,
-      tanggalTerjadwal: DateTime.parse(json['tanggalTerjadwal'] as String),
-      statusBaca: json['statusBaca'] as bool,
-      waktuDikirim: json['waktuDikirim'] as String,
+      idNotifikasi: json['id_notifikasi'] as String,
+      idAkun: json['id_akun'] as String,
+      judul: json['judul'] as String,
+      isi: json['isi'] as String,
+      tanggalNotifikasi: json['tanggal_notifikasi'] as String,
+      statusBaca: json['status_baca'] as bool,
     );
 
 Map<String, dynamic> _$NotifikasiToJson(Notifikasi instance) =>
     <String, dynamic>{
-      'idNotifikasi': instance.idNotifikasi,
-      'idTagihan': instance.idTagihan,
-      'idTemplate': instance.idTemplate,
-      'tanggalTerjadwal': instance.tanggalTerjadwal.toIso8601String(),
-      'statusBaca': instance.statusBaca,
-      'waktuDikirim': instance.waktuDikirim,
+      'id_notifikasi': instance.idNotifikasi,
+      'id_akun': instance.idAkun,
+      'judul': instance.judul,
+      'isi': instance.isi,
+      'tanggal_notifikasi': instance.tanggalNotifikasi,
+      'status_baca': instance.statusBaca,
     };

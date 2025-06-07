@@ -1,132 +1,163 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../controllers/auth_controller.dart';
-import '../services/api_service.dart';
-import '../models/akun_model.dart';
-import '../models/tabung_model.dart';
-import '../models/transaksi_model.dart';
+import 'package:laris_jaya_gas/models/akun_model.dart';
+import 'package:laris_jaya_gas/models/perorangan_model.dart';
+import 'package:laris_jaya_gas/models/perusahaan_model.dart';
+import 'package:laris_jaya_gas/models/tabung_model.dart';
+import 'package:laris_jaya_gas/models/transaksi_model.dart';
+import 'package:laris_jaya_gas/services/api_service.dart';
 
 class PelangganController extends GetxController {
-  var akun = Rxn<Akun>();
-  var activeCylinders = <Tabung>[].obs;
-  var transactionHistory = <Transaksi>[].obs;
-  var isLoading = false.obs;
-  var errorMessage = ''.obs;
-
-  final AuthController authController = Get.find<AuthController>();
-  late ApiService apiService;
-  late SharedPreferences prefs;
+  final ApiService apiService = Get.find<ApiService>();
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
+  final akun = Rx<Akun?>(null);
+  final perorangan = Rx<Perorangan?>(null);
+  final perusahaan = Rx<Perusahaan?>(null);
+  final activeCylinders = <Tabung>[].obs;
+  final transactionHistory = <Transaksi>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    initialize();
+    fetchProfile();
+    fetchActiveCylinders();
+    fetchTransactionHistory();
   }
 
-  Future<void> initialize() async {
-    prefs = await SharedPreferences.getInstance();
-    apiService = ApiService(prefs);
-    if (authController.isLoggedIn.value &&
-        authController.akunId.value.isNotEmpty) {
-      loadCustomerData();
-    } else {
-      print('PelangganController: Skipping data load, user not logged in');
-      errorMessage.value = 'Silakan login untuk melihat data pelanggan';
-      Get.offAllNamed('/login');
-    }
-  }
-
-  Future<void> loadCustomerData() async {
-    print(
-        'PelangganController: Loading customer data for akunId=${authController.akunId.value}');
-    isLoading.value = true;
-    errorMessage.value = '';
-
+  // Fetch pelanggan profile
+  Future<void> fetchProfile() async {
     try {
-      final profile = await apiService.getCustomerProfile();
-      akun.value = profile;
+      isLoading.value = true;
+      errorMessage.value = '';
 
-      final cylinders = await apiService.getActiveCylinders();
-      activeCylinders.assignAll(cylinders);
+      final response = await apiService.getPelangganProfile();
 
-      final transactions = await apiService.getTransactionHistory();
-      transactionHistory.assignAll(transactions);
-
-      print(
-          'PelangganController: Data loaded, activeCylinders=${activeCylinders.length}, '
-          'transactionHistory=${transactionHistory.length}');
-    } catch (e) {
-      errorMessage.value = 'Gagal memuat data: ${e.toString()}';
-      print('PelangganController: Error loading data: $e');
-      if (e.toString().contains('Unauthorized')) {
-        errorMessage.value = 'Sesi habis, silakan login kembali';
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Get.snackbar(
-            'Error',
-            errorMessage.value,
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 5),
+      if (response['success']) {
+        final data = response['data'];
+        akun.value = Akun(
+          idAkun: int.tryParse(data['id_akun']?.toString() ?? ''),
+          email: data['email'],
+          role: data['role'],
+          statusAktif: data['status_aktif'] ?? false,
+        );
+        perorangan.value = Perorangan(
+          namaLengkap: data['nama_lengkap'],
+          nik: data['nik'],
+          noTelepon: data['no_telepon'],
+          alamat: data['alamat'],
+          idPerusahaan: int.tryParse(data['id_perusahaan']?.toString() ?? ''),
+        );
+        if (data['nama_perusahaan'] != null) {
+          perusahaan.value = Perusahaan(
+            idPerusahaan: int.tryParse(data['id_perusahaan']?.toString() ?? ''),
+            namaPerusahaan: data['nama_perusahaan'],
+            alamatPerusahaan: data['alamat_perusahaan'],
           );
-          authController.logout();
-          Get.offAllNamed('/login');
-        });
+        }
       } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Get.snackbar(
-            'Error',
-            errorMessage.value,
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 5),
-          );
-        });
+        errorMessage.value = response['message'] ?? 'Gagal mengambil profil';
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
+    } catch (e) {
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<String> getNearestDueDate() async {
+  // Fetch active cylinders
+  Future<void> fetchActiveCylinders() async {
     try {
-      if (!authController.isLoggedIn.value ||
-          authController.akunId.value.isEmpty) {
-        return 'Tidak ada';
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final response = await apiService.getTabungAktif();
+
+      if (response['success']) {
+        activeCylinders.value = (response['data'] as List<dynamic>)
+            .map((item) => Tabung.fromJson(item))
+            .toList();
+      } else {
+        errorMessage.value = response['message'] ?? 'Gagal mengambil tabung aktif';
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
-      final response = await apiService.getNearestDueDate();
-      return response['due_date'] ?? 'Tidak ada';
     } catch (e) {
-      print('Error fetching nearest due date: $e');
-      return 'Tidak ada';
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  void viewCylinderDetails(String idTabung) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  // Fetch transaction history
+  Future<void> fetchTransactionHistory() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final response = await apiService.getTransaksi();
+
+      if (response['success']) {
+        transactionHistory.value = (response['data'] as List<dynamic>)
+            .map((item) => Transaksi.fromJson(item))
+            .toList();
+      } else {
+        errorMessage.value = response['message'] ?? 'Gagal mengambil riwayat transaksi';
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      errorMessage.value = e.toString().replaceFirst('Exception: ', '');
       Get.snackbar(
-        'Detail Tabung',
-        'Menampilkan detail tabung $idTabung.',
+        'Error',
+        errorMessage.value,
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-    });
-    Get.toNamed('/detail_tabung', arguments: idTabung);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
+  // View cylinder details
+  void viewCylinderDetails(String idTabung) {
+    Get.toNamed('/pelanggan/tabung/$idTabung');
+  }
+
+  // View transaction details
   void viewTransactionDetails(String idTransaksi) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.snackbar(
-        'Detail Transaksi',
-        'Menampilkan detail transaksi $idTransaksi.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-      );
-    });
-    Get.toNamed('/detail_transaksi', arguments: idTransaksi);
+    Get.toNamed('/pelanggan/transaksi/$idTransaksi');
   }
 }
