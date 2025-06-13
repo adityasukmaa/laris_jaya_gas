@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:laris_jaya_gas/models/perorangan_model.dart';
+import 'package:laris_jaya_gas/models/tabung_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // Ganti dengan URL API Laravel Anda
-  static const String _baseUrl = 'http://192.168.50.150:8000/api';
+  static const String _baseUrl = 'http://192.168.96.150:8000/api';
 
   // SharedPreferences untuk menyimpan token
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -232,18 +234,250 @@ class ApiService {
     }
   }
 
+  // --- Fungsi CRUD Pelanggan ---
+
+  // Get list pelanggan
+  Future<List<Perorangan>> getAllPelanggan() async {
+    try {
+      final response = await getRequest('administrator/pelanggan');
+      if (response['status'] && response['data'] != null) {
+        return (response['data'] as List)
+            .map((json) => Perorangan.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil daftar pelanggan');
+    }
+  }
+
+  // Get detail pelanggan
+  Future<Perorangan?> getPelangganById(int id) async {
+    try {
+      final response = await getRequest('administrator/pelanggan/$id');
+      if (response['status'] && response['data'] != null) {
+        return Perorangan.fromJson(response['data']);
+      }
+      return null;
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil detail pelanggan');
+    }
+  }
+
+  // Create pelanggan
+  Future<Map<String, dynamic>> createPelanggan({
+    required String namaLengkap,
+    required String nik,
+    required String noTelepon,
+    required String alamat,
+    int? idPerusahaan,
+    required String email,
+    required String password,
+    required bool isAuthenticated,
+  }) async {
+    try {
+      final response = await postRequest(
+        'administrator/pelanggan',
+        data: {
+          'nama_lengkap': namaLengkap,
+          'nik': nik,
+          'no_telepon': noTelepon,
+          'alamat': alamat,
+          'id_perusahaan': idPerusahaan,
+          'email': email,
+          'password': password,
+          'password_confirmation': password,
+          'is_authenticated': isAuthenticated,
+        },
+      );
+      return response;
+    } catch (e) {
+      throw _handleError(e, 'Gagal menambahkan pelanggan');
+    }
+  }
+
+  // Update pelanggan
+  Future<Map<String, dynamic>> updatePelanggan({
+    required int id,
+    String? namaLengkap,
+    String? nik,
+    String? noTelepon,
+    String? alamat,
+    int? idPerusahaan,
+    String? email,
+    String? password,
+    bool? statusAktif,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (namaLengkap != null) data['nama_lengkap'] = namaLengkap;
+      if (nik != null) data['nik'] = nik;
+      if (noTelepon != null) data['no_telepon'] = noTelepon;
+      if (alamat != null) data['alamat'] = alamat;
+      if (idPerusahaan != null) data['id_perusahaan'] = idPerusahaan;
+      if (email != null) data['email'] = email;
+      if (password != null) {
+        data['password'] = password;
+        data['password_confirmation'] = password;
+      }
+      if (statusAktif != null) data['status_aktif'] = statusAktif;
+
+      final response = await putRequest(
+        'administrator/pelanggan/$id',
+        data: data,
+      );
+      return response;
+    } catch (e) {
+      throw _handleError(e, 'Gagal memperbarui pelanggan');
+    }
+  }
+
+  // Delete pelanggan
+  Future<Map<String, dynamic>> deletePelanggan(int id) async {
+    try {
+      final response = await deleteRequest('administrator/pelanggan/$id');
+      return response;
+    } catch (e) {
+      throw _handleError(e, 'Gagal menghapus pelanggan');
+    }
+  }
+
+  // Get all tabung (Admin)
+  Future<List<Tabung>> getAllTabung() async {
+    try {
+      final response = await getRequest('administrator/tabung');
+      if (response['success'] && response['data'] != null) {
+        return (response['data'] as List)
+            .map((json) => Tabung.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil data tabung');
+    }
+  }
+
+  // Get tabung by ID (Admin)
+  Future<Tabung?> getTabungById(int id) async {
+    try {
+      final response = await getRequest('administrator/tabung/$id');
+      if (response['success'] && response['data'] != null) {
+        return Tabung.fromJson(response['data']);
+      }
+      return null;
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil detail tabung');
+    }
+  }
+
+// Get tabung by kode (Admin)
+  Future<Tabung?> getTabungByKode(String kodeTabung) async {
+    try {
+      final response = await getRequest(
+        'administrator/tabung/kode?kode_tabung=$kodeTabung',
+      );
+      if (response['success'] && response['data'] != null) {
+        return Tabung.fromJson(response['data']);
+      }
+      return null;
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil tabung berdasarkan kode');
+    }
+  }
+
+// Create tabung (Admin)
+  Future<Map<String, dynamic>> createTabung({
+    required String kodeTabung,
+    required int idJenisTabung,
+    required int idStatusTabung,
+  }) async {
+    try {
+      final response = await postRequest(
+        'administrator/tabung',
+        data: {
+          'kode_tabung': kodeTabung,
+          'id_jenis_tabung': idJenisTabung,
+          'id_status_tabung': idStatusTabung,
+        },
+      );
+      return response;
+    } catch (e) {
+      throw _handleError(e, 'Gagal menambahkan tabung');
+    }
+  }
+
+// Update tabung (Admin)
+  Future<Map<String, dynamic>> updateTabung({
+    required int id,
+    required String kodeTabung,
+    required int idJenisTabung,
+    required int idStatusTabung,
+  }) async {
+    try {
+      final response = await putRequest(
+        'administrator/tabung/$id',
+        data: {
+          'kode_tabung': kodeTabung,
+          'id_jenis_tabung': idJenisTabung,
+          'id_status_tabung': idStatusTabung,
+        },
+      );
+      return response;
+    } catch (e) {
+      throw _handleError(e, 'Gagal memperbarui tabung');
+    }
+  }
+
+// Delete tabung (Admin)
+  Future<Map<String, dynamic>> deleteTabung(int id) async {
+    try {
+      final response = await deleteRequest('administrator/tabung/$id');
+      return response;
+    } catch (e) {
+      throw _handleError(e, 'Gagal menghapus tabung');
+    }
+  }
+
+// Get tabung tersedia (Pelanggan)
+  Future<List<Map<String, dynamic>>> getTabungTersedia() async {
+    try {
+      final response = await getRequest('pelanggan/tabung-tersedia');
+      if (response['success'] && response['data'] != null) {
+        return List<Map<String, dynamic>>.from(response['data']);
+      }
+      return [];
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil tabung tersedia');
+    }
+  }
+
+// Get tabung aktif (Pelanggan)
+  Future<List<Tabung>> getTabungAktif() async {
+    try {
+      final response = await getRequest('pelanggan/tabung-aktif');
+      if (response['success'] && response['data'] != null) {
+        return (response['data'] as List)
+            .map((json) => Tabung.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil tabung aktif');
+    }
+  }
+
   // Fetch tabung data
   Future<Map<String, dynamic>> getTabung() async {
     return await getRequest('administrator/tabung');
   }
 
   // Fetch tabung aktif untuk pelanggan
-  Future<Map<String, dynamic>> getTabungAktif() async {
+  Future<Map<String, dynamic>> getTabungAktifPelanggan() async {
     return await getRequest('pelanggan/tabung-aktif');
   }
 
   // Fetch profile (untuk admin dan pelanggan)
-  Future<Map<String, dynamic>> getProfile() async {
+  Future<Map<String, dynamic>> getAdministratorProfile() async {
     return await getRequest('administrator/profile');
   }
 

@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:laris_jaya_gas/controllers/stok_tabung_controller.dart';
-import 'package:laris_jaya_gas/services/api_service.dart';
+import 'package:laris_jaya_gas/controllers/manage_pelanggan_controller.dart';
+import 'package:laris_jaya_gas/screens/administrator/detail_data_pelanggan_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/detail_tabung_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/edit_pelanggan_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/edit_tabung_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/manage_pelanggan_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/stok_tabung_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/tambah_pelanggan_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/tambah_tabung_screen.dart';
 import '../controllers/administrator_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/pelanggan_controller.dart';
 import '../controllers/tabung_controller.dart';
-import '../controllers/transaksi_controller.dart';
-import '../screens/administrator/detail_tabung_screen.dart';
-import '../screens/administrator/detail_transaksi_screen.dart';
-import '../screens/administrator/edit_tabung_screen.dart';
-import '../screens/administrator/peminjaman_screen.dart';
-import '../screens/administrator/qr_scan_screen.dart';
-import '../screens/administrator/tambah_tabung_screen.dart';
-import '../screens/administrator/tambah_transaksi_screen.dart';
-import '../screens/administrator/transaksi_screen.dart';
-import '../screens/pelanggan/ajukan_isi_ulang_screen.dart';
-import '../screens/pelanggan/ajukan_peminjaman_screen.dart';
 import '../screens/pelanggan/dashboard_pelanggan_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/administrator/dashboard_administrator_screen.dart';
-import '../screens/administrator/stok_tabung_screen.dart';
 import '../screens/splash_screen/splash_screen.dart';
 
 // Define all route names as constants for easy reference and maintenance
@@ -52,6 +47,13 @@ class AppRoutes {
       '/administrator/tambah-transaksi';
   static const String qrScan = '/administrator/qr-scan';
   static const String peminjamanAdministrator = '/administrator/peminjaman';
+
+  // Manage Pelanggan Routes
+  static const String dataPelanggan = '/administrator/data-pelanggan';
+  static const String tambahPelanggan = '/administrator/tambah-data-pelanggan';
+  static const String detailDataPelanggan =
+      '/administrator/detail-data-pelanggan';
+  static const String editDataPelanggan = '/administrator/edit-data-pelanggan';
 
   // List of all routes with their respective pages and controller bindings
   static final routes = [
@@ -138,54 +140,112 @@ class AppRoutes {
       }),
       transition: Transition.fadeIn,
     ),
+    GetPage(
+      name: stokTabung,
+      page: () => StokTabungScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(TabungController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.detailTabung,
+      page: () {
+        final int? idTabung = Get.arguments as int?;
+        if (idTabung == null) {
+          return const Scaffold(
+            body: Center(child: Text('ID Tabung Tidak Ditemukan')),
+          );
+        }
+        return DetailTabungScreen(idTabung: idTabung.toString());
+      },
+      binding: BindingsBuilder(() {
+        Get.put(TabungController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.tambahTabung,
+      page: () => TambahTabungScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(TabungController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: editTabung,
+      page: () {
+        final int? idTabung = Get.arguments as int?;
+        if (idTabung == null) {
+          return const Scaffold(
+            body: Center(child: Text('Kode Tabung Tidak Ditemukan')),
+          );
+        }
+        return EditTabungScreen();
+      },
+      binding: BindingsBuilder(() {
+        Get.put(TabungController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+
+    // Manage Pelanggan
+    GetPage(
+      name: dataPelanggan,
+      page: () => ManagePelangganScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(ManagePelangganController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: tambahPelanggan,
+      page: () => TambahPelangganScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(ManagePelangganController());
+      }),
+    ),
+    GetPage(
+      name: detailDataPelanggan,
+      page: () {
+        final id = Get.arguments as int;
+        return DetailDataPelangganScreen(idPelanggan: id);
+      },
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: editDataPelanggan,
+      page: () {
+        return EditDataPelangganScreen();
+      },
+      transition: Transition.rightToLeft,
+    ),
     // GetPage(
-    //   name: stokTabung,
-    //   page: () => StokTabungScreen(),
-    //   binding: BindingsBuilder(() {
-    //     Get.put(StokTabungController());
-    //   }),
-    //   transition: Transition.rightToLeft,
-    // ),
-    // GetPage(
-    //   name: detailTabung,
+    //   name: AppRoutes.qrScan,
     //   page: () {
-    //     final String? kodeTabung = Get.arguments as String?;
-    //     if (kodeTabung == null) {
+    //     final Map<String, dynamic>? args =
+    //         Get.arguments as Map<String, dynamic>?;
+    //     final Function(Map<String, dynamic>)? onTabungSelected =
+    //         args?['onTabungSelected'];
+    //     final List<Map<String, dynamic>> selectedTabungs =
+    //         args?['selectedTabungs'] ?? [];
+    //     if (onTabungSelected == null) {
     //       return const Scaffold(
-    //         body: Center(child: Text('Kode Tabung Tidak Ditemukan')),
+    //         body: Center(
+    //             child: Text('Parameter onTabungSelected Tidak Ditemukan')),
     //       );
     //     }
-    //     return DetailTabungScreen(kodeTabung: kodeTabung);
+    //     return QRScanScreen(
+    //       onTabungSelected: onTabungSelected,
+    //       selectedTabungs: selectedTabungs,
+    //     );
     //   },
     //   binding: BindingsBuilder(() {
     //     Get.put(TabungController());
     //   }),
     //   transition: Transition.rightToLeft,
     // ),
-    // GetPage(
-    //   name: tambahTabung,
-    //   page: () => TambahTabungScreen(),
-    //   binding: BindingsBuilder(() {
-    //     Get.put(TabungController());
-    //   }),
-    //   transition: Transition.rightToLeft,
-    // ),
-    // GetPage(
-    //   name: editTabung,
-    //   page: () {
-    //     final String? kodeTabung = Get.arguments as String?;
-    //     if (kodeTabung == null) {
-    //       return const Scaffold(
-    //         body: Center(child: Text('Kode Tabung Tidak Ditemukan')),
-    //       );
-    //     }
-    //     return EditTabungScreen(kodeTabung: kodeTabung);
-    //   },
-    //   binding: BindingsBuilder(() {
-    //     Get.put(TabungController());
-    //   }),
-    //   transition: Transition.rightToLeft,
-    // ),
+
     // GetPage(
     //   name: transaksiAdministrator,
     //   page: () => const TransaksiScreen(),

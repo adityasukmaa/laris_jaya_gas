@@ -23,9 +23,9 @@ class AdministratorController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
-      final response = await apiService.getProfile();
-      
+
+      final response = await apiService.getAdministratorProfile();
+
       if (response['success']) {
         administratorProfile.value = response['data'] ?? {};
       } else {
@@ -50,9 +50,9 @@ class AdministratorController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final response = await apiService.getStatistics();
-      
+
       if (response['success']) {
         statistics.value = response['data'] ?? {};
       } else {
@@ -77,13 +77,15 @@ class AdministratorController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final response = await apiService.getPendingAccounts();
-      
+
       if (response['success']) {
-        pendingAccounts.value = List<Map<String, dynamic>>.from(response['data'] ?? []);
+        pendingAccounts.value =
+            List<Map<String, dynamic>>.from(response['data'] ?? []);
       } else {
-        errorMessage.value = response['message'] ?? 'Gagal mengambil daftar akun pending';
+        errorMessage.value =
+            response['message'] ?? 'Gagal mengambil daftar akun pending';
       }
     } catch (e) {
       errorMessage.value = e.toString().replaceFirst('Exception: ', '');
@@ -104,9 +106,9 @@ class AdministratorController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final response = await apiService.confirmAccount(email);
-      
+
       if (response['success']) {
         Get.snackbar(
           'Sukses',

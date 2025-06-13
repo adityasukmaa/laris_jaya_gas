@@ -5,6 +5,7 @@ class Perorangan {
   final String? noTelepon;
   final String? alamat;
   final int? idPerusahaan;
+  final String? namaPerusahaan;
 
   Perorangan({
     this.idPerorangan,
@@ -13,6 +14,7 @@ class Perorangan {
     this.noTelepon,
     this.alamat,
     this.idPerusahaan,
+    this.namaPerusahaan,
   });
 
   factory Perorangan.fromJson(Map<String, dynamic> json) {

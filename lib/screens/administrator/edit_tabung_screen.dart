@@ -1,338 +1,399 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:laris_jaya_gas/models/jenis_tabung_model.dart';
-// import 'package:laris_jaya_gas/models/status_tabung_model.dart';
-// import 'package:laris_jaya_gas/models/tabung_model.dart';
-// import 'package:laris_jaya_gas/utils/constants.dart';
-// import '../../utils/dummy_data.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:laris_jaya_gas/controllers/tabung_controller.dart';
+import 'package:laris_jaya_gas/utils/constants.dart';
 
-// class EditTabungScreen extends StatefulWidget {
-//   const EditTabungScreen({super.key, required String kodeTabung});
+class EditTabungScreen extends StatefulWidget {
+  const EditTabungScreen({super.key});
 
-//   @override
-//   State<EditTabungScreen> createState() => _EditTabungScreenState();
-// }
+  @override
+  State<EditTabungScreen> createState() => _EditTabungScreenState();
+}
 
-// class _EditTabungScreenState extends State<EditTabungScreen> {
-//   final Color primaryBlue = const Color(0xFF0172B2); // Warna utama aplikasi
-//   final Color darkBlue = const Color(0xFF001848); // Warna sekunder aplikasi
+class _EditTabungScreenState extends State<EditTabungScreen> {
+  final TextEditingController kodeTabungController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final TabungController controller = Get.find<TabungController>();
+  int? idTabung;
 
-//   // Daftar opsi untuk dropdown jenis tabung dan status tabung dari DummyData
-//   final List<String> jenisTabungList =
-//       DummyData.jenisTabungList.map((jenis) => jenis.namaJenis).toList();
-//   final List<String> statusTabungList =
-//       DummyData.statusTabungList.map((status) => status.statusTabung).toList();
+  @override
+  void initState() {
+    super.initState();
+    idTabung = Get.arguments as int?;
+    if (idTabung != null && idTabung! > 0) {
+      // Panggil fetchTabungById setelah widget diinisialisasi
+      controller.fetchTabungById(idTabung!);
+      // Inisialisasi controller berdasarkan selectedTabung
+      controller.selectedTabung.listen((tabung) {
+        if (tabung != null && kodeTabungController.text.isEmpty) {
+          setState(() {
+            kodeTabungController.text = tabung.kodeTabung ?? '';
+            controller.selectedJenis.value =
+                tabung.jenisTabung?.namaJenis ?? 'Semua';
+            controller.selectedStatus.value =
+                tabung.statusTabung?.statusTabung ?? 'Semua';
+          });
+        }
+      });
+    }
+  }
 
-//   // Controller untuk form input
-//   final TextEditingController kodeTabungController = TextEditingController();
-//   final _formKey = GlobalKey<FormState>(); // Key untuk validasi form
-//   String? selectedJenis; // Variabel untuk menyimpan jenis tabung yang dipilih
-//   String? selectedStatus; // Variabel untuk menyimpan status tabung yang dipilih
-//   String? kodeTabung; // Kode tabung yang diterima dari argumen
+  @override
+  void dispose() {
+    kodeTabungController.dispose();
+    super.dispose();
+  }
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     // Ambil kode tabung dari argumen navigasi
-//     kodeTabung = Get.arguments as String?;
-//     if (kodeTabung != null) {
-//       // Cari tabung berdasarkan kode
-//       final tabung = DummyData.tabungList.firstWhere(
-//         (tabung) => tabung.kodeTabung == kodeTabung,
-//         orElse: () => Tabung(
-//           idTabung: '',
-//           kodeTabung: '',
-//           idJenisTabung: null,
-//           idStatusTabung: null,
-//           jenisTabung: JenisTabung(
-//               idJenisTabung: 0, kodeJenis: '', namaJenis: '', harga: 0.0),
-//           statusTabung: StatusTabung(idStatusTabung: 0, statusTabung: ''),
-//         ),
-//       );
-//       kodeTabungController.text = tabung.kodeTabung;
-//       selectedJenis = tabung.jenisTabung?.namaJenis;
-//       selectedStatus = tabung.statusTabung?.statusTabung;
-//     }
-//   }
+  void _saveTabung() {
+    if (_formKey.currentState!.validate()) {
+      final tabung = controller.selectedTabung.value;
+      if (tabung == null || tabung.idTabung == null) {
+        Get.snackbar(
+          'Error',
+          'Data tabung tidak valid',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+        return;
+      }
 
-//   @override
-//   void dispose() {
-//     kodeTabungController.dispose();
-//     super.dispose();
-//   }
+      final selectedJenis = controller.jenisTabungList.firstWhere(
+        (jenis) => jenis.namaJenis == controller.selectedJenis.value,
+        orElse: () => controller.jenisTabungList.first,
+      );
+      final selectedStatus = controller.statusTabungList.firstWhere(
+        (status) => status.statusTabung == controller.selectedStatus.value,
+        orElse: () => controller.statusTabungList.first,
+      );
 
-//   // Fungsi untuk menyimpan perubahan tabung
-//   void _saveTabung() {
-//     if (_formKey.currentState!.validate()) {
-//       // Validasi berhasil, simpan perubahan tabung
-//       final index = DummyData.tabungList
-//           .indexWhere((tabung) => tabung.kodeTabung == kodeTabung);
-//       if (index != -1) {
-//         // Cari idJenisTabung dan idStatusTabung berdasarkan pilihan pengguna
-//         final selectedJenisTabung = DummyData.jenisTabungList.firstWhere(
-//           (jenis) => jenis.namaJenis == selectedJenis,
-//           orElse: () => JenisTabung(
-//               idJenisTabung: 0, kodeJenis: '', namaJenis: '', harga: 0.0),
-//         );
-//         final selectedStatusTabung = DummyData.statusTabungList.firstWhere(
-//           (status) => status.statusTabung == selectedStatus,
-//           orElse: () => StatusTabung(idStatusTabung: 0, statusTabung: ''),
-//         );
+      controller.updateTabung(
+        id: tabung.idTabung!,
+        kodeTabung: kodeTabungController.text.trim(),
+        idJenisTabung: selectedJenis.idJenisTabung ?? 0,
+        idStatusTabung: selectedStatus.idStatusTabung ?? 0,
+      );
+    }
+  }
 
-//         final updatedTabung = Tabung(
-//           idTabung: DummyData.tabungList[index].idTabung,
-//           kodeTabung: kodeTabungController.text,
-//           idJenisTabung: selectedJenisTabung.idJenisTabung,
-//           idStatusTabung: selectedStatusTabung.idStatusTabung,
-//           jenisTabung: selectedJenisTabung,
-//           statusTabung: selectedStatusTabung,
-//         );
-//         DummyData.tabungList[index] = updatedTabung;
+  void _cancelEdit() {
+    Get.back();
+  }
 
-//         Get.back(); // Kembali ke halaman sebelumnya
-//         Get.snackbar('Sukses', 'Tabung berhasil diperbarui',
-//             backgroundColor: AppColors.whiteSemiTransparent,
-//             colorText: Colors.black);
-//       } else {
-//         Get.snackbar('Error', 'Tabung tidak ditemukan',
-//             backgroundColor: Colors.red, colorText: Colors.white);
-//       }
-//     }
-//   }
+  @override
+  Widget build(BuildContext context) {
+    if (idTabung == null || idTabung! <= 0) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryBlue,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Get.back(),
+          ),
+          title:
+              const Text('Edit Tabung', style: TextStyle(color: Colors.white)),
+        ),
+        body: const Center(
+          child: Text(
+            'ID Tabung tidak valid',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+      );
+    }
 
-//   // Fungsi untuk membatalkan edit
-//   void _cancelEdit() {
-//     Get.back(); // Kembali ke halaman sebelumnya tanpa menyimpan
-//   }
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double paddingVertical = screenHeight * 0.02;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     // Dapatkan tinggi dan lebar layar untuk penyesuaian responsif
-//     final double screenHeight = MediaQuery.of(context).size.height;
-//     final double paddingVertical = screenHeight * 0.02; // 2% dari tinggi layar
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryBlue,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        title: const Text('Edit Tabung', style: TextStyle(color: Colors.white)),
+      ),
+      body: Obx(() {
+        if (controller.isLoadingDetail.value) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (controller.errorMessageDetail.value.isNotEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  controller.errorMessageDetail.value,
+                  style: const TextStyle(fontSize: 16, color: Colors.red),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => controller.fetchTabungById(idTabung!),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          );
+        } else if (controller.selectedTabung.value == null) {
+          return const Center(
+            child: Text(
+              'Tabung tidak ditemukan',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          );
+        }
 
-//     return Scaffold(
-//       backgroundColor: Colors.white, // Konsistensi dengan TambahTabungScreen
-//       appBar: AppBar(
-//         backgroundColor: primaryBlue,
-//         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back, color: Colors.white),
-//           onPressed: () => Get.back(),
-//         ),
-//         title: const Text('Edit Tabung', style: TextStyle(color: Colors.white)),
-//       ),
-//       body: SingleChildScrollView(
-//         child: Padding(
-//           padding:
-//               EdgeInsets.symmetric(vertical: paddingVertical, horizontal: 24.0),
-//           child: Form(
-//             key: _formKey,
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 const SizedBox(height: 20),
-//                 // Input untuk Kode Tabung (readonly)
-//                 Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     const Text(
-//                       'Kode Tabung',
-//                       style: TextStyle(
-//                         fontSize: 14,
-//                         fontWeight: FontWeight.w500,
-//                         color: Colors.black,
-//                       ),
-//                     ),
-//                     const SizedBox(height: 8),
-//                     TextFormField(
-//                       controller: kodeTabungController,
-//                       readOnly: true, // Kode tabung tidak boleh diubah
-//                       decoration: InputDecoration(
-//                         border: OutlineInputBorder(
-//                           borderSide:
-//                               const BorderSide(color: Color(0xFFD0D5DD)),
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                         contentPadding: const EdgeInsets.symmetric(
-//                             horizontal: 16, vertical: 12),
-//                         prefixIcon: const Icon(Icons.tag,
-//                             size: 20, color: Color(0xFFD0D5DD)),
-//                         hintText: 'Masukkan kode tabung (contoh: OXY023)',
-//                         hintStyle: const TextStyle(fontSize: 14),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//                 const SizedBox(height: 16),
-//                 // Dropdown untuk Jenis Tabung
-//                 Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     const Text(
-//                       'Jenis Tabung',
-//                       style: TextStyle(
-//                         fontSize: 14,
-//                         fontWeight: FontWeight.w500,
-//                         color: Colors.black,
-//                       ),
-//                     ),
-//                     const SizedBox(height: 8),
-//                     DropdownButtonFormField<String>(
-//                       decoration: InputDecoration(
-//                         border: OutlineInputBorder(
-//                           borderSide:
-//                               const BorderSide(color: Color(0xFFD0D5DD)),
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                         contentPadding: const EdgeInsets.symmetric(
-//                             horizontal: 16, vertical: 12),
-//                         prefixIcon: const Icon(Icons.category,
-//                             size: 20, color: Color(0xFFD0D5DD)),
-//                         hintText: 'Pilih Jenis',
-//                         hintStyle: const TextStyle(fontSize: 14),
-//                       ),
-//                       value: selectedJenis,
-//                       items: jenisTabungList.map((String value) {
-//                         return DropdownMenuItem<String>(
-//                           value: value,
-//                           child: Text(
-//                             value,
-//                             style: const TextStyle(
-//                               fontSize: 14,
-//                               color: Colors.black,
-//                             ),
-//                           ),
-//                         );
-//                       }).toList(),
-//                       onChanged: (value) {
-//                         setState(() {
-//                           selectedJenis = value; // Perbarui nilai jenis tabung
-//                         });
-//                       },
-//                       dropdownColor: Colors.white,
-//                       icon: const Icon(Icons.arrow_drop_down,
-//                           color: Color(0xFFD0D5DD), size: 24),
-//                       isExpanded: true,
-//                       style: const TextStyle(fontSize: 14, color: Colors.black),
-//                       menuMaxHeight: screenHeight * 0.3,
-//                       elevation: 8,
-//                       validator: (value) {
-//                         if (value == null) {
-//                           return 'Jenis Tabung harus dipilih';
-//                         }
-//                         return null;
-//                       },
-//                     ),
-//                   ],
-//                 ),
-//                 const SizedBox(height: 16),
-//                 // Dropdown untuk Status Tabung
-//                 Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     const Text(
-//                       'Status Tabung',
-//                       style: TextStyle(
-//                         fontSize: 14,
-//                         fontWeight: FontWeight.w500,
-//                         color: Colors.black,
-//                       ),
-//                     ),
-//                     const SizedBox(height: 8),
-//                     DropdownButtonFormField<String>(
-//                       decoration: InputDecoration(
-//                         border: OutlineInputBorder(
-//                           borderSide:
-//                               const BorderSide(color: Color(0xFFD0D5DD)),
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                         contentPadding: const EdgeInsets.symmetric(
-//                             horizontal: 16, vertical: 12),
-//                         prefixIcon: const Icon(Icons.check_circle_outline,
-//                             size: 20, color: Color(0xFFD0D5DD)),
-//                         hintText: 'Pilih Status',
-//                         hintStyle: const TextStyle(fontSize: 14),
-//                       ),
-//                       value: selectedStatus,
-//                       items: statusTabungList.map((String value) {
-//                         return DropdownMenuItem<String>(
-//                           value: value,
-//                           child: Text(
-//                             value,
-//                             style: const TextStyle(
-//                               fontSize: 14,
-//                               color: Colors.black,
-//                             ),
-//                           ),
-//                         );
-//                       }).toList(),
-//                       onChanged: (value) {
-//                         setState(() {
-//                           selectedStatus =
-//                               value; // Perbarui nilai status tabung
-//                         });
-//                       },
-//                       dropdownColor: Colors.white,
-//                       icon: const Icon(Icons.arrow_drop_down,
-//                           color: Color(0xFFD0D5DD), size: 24),
-//                       isExpanded: true,
-//                       style: const TextStyle(fontSize: 14, color: Colors.black),
-//                       menuMaxHeight: screenHeight * 0.3,
-//                       elevation: 8,
-//                       validator: (value) {
-//                         if (value == null) {
-//                           return 'Status Tabung harus dipilih';
-//                         }
-//                         return null;
-//                       },
-//                     ),
-//                   ],
-//                 ),
-//                 const SizedBox(height: 32),
-//                 // Tombol Simpan dan Batal
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: [
-//                     Expanded(
-//                       child: OutlinedButton(
-//                         onPressed: _cancelEdit,
-//                         style: OutlinedButton.styleFrom(
-//                           padding: const EdgeInsets.symmetric(vertical: 12),
-//                           side: BorderSide(color: AppColors.secondary),
-//                           shape: RoundedRectangleBorder(
-//                               borderRadius: BorderRadius.circular(8)),
-//                         ),
-//                         child: Text(
-//                           'Batal',
-//                           style: TextStyle(
-//                               color: AppColors.secondary, fontSize: 16),
-//                         ),
-//                       ),
-//                     ),
-//                     const SizedBox(width: 16),
-//                     Expanded(
-//                       child: ElevatedButton(
-//                         onPressed: _saveTabung,
-//                         style: ElevatedButton.styleFrom(
-//                           backgroundColor: darkBlue,
-//                           padding: const EdgeInsets.symmetric(vertical: 12),
-//                           shape: RoundedRectangleBorder(
-//                               borderRadius: BorderRadius.circular(8)),
-//                         ),
-//                         child: const Text(
-//                           'Simpan',
-//                           style: TextStyle(color: Colors.white, fontSize: 16),
-//                         ),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//                 const SizedBox(height: 20), // Padding bawah
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                vertical: paddingVertical, horizontal: 24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Kode Tabung',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: kodeTabungController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide:
+                                const BorderSide(color: Color(0xFFD0D5DD)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          prefixIcon: const Icon(Icons.tag,
+                              size: 20, color: Color(0xFFD0D5DD)),
+                          hintText: 'Masukkan kode tabung (contoh: OXY023)',
+                          hintStyle: const TextStyle(fontSize: 14),
+                          errorText: controller.fieldErrors['kode_tabung'],
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Kode Tabung tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Jenis Tabung',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide:
+                                const BorderSide(color: Color(0xFFD0D5DD)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          prefixIcon: const Icon(Icons.category,
+                              size: 20, color: Color(0xFFD0D5DD)),
+                          hintText: 'Pilih Jenis',
+                          hintStyle: const TextStyle(fontSize: 14),
+                          errorText: controller.fieldErrors['id_jenis_tabung'],
+                        ),
+                        value: controller.jenisTabungList.any((jenis) =>
+                                jenis.namaJenis ==
+                                controller.selectedJenis.value)
+                            ? controller.selectedJenis.value
+                            : controller.jenisTabungList.isNotEmpty
+                                ? controller.jenisTabungList.first.namaJenis
+                                : null,
+                        items: controller.jenisTabungList
+                            .map((jenis) => DropdownMenuItem<String>(
+                                  value: jenis.namaJenis,
+                                  child: Text(
+                                    jenis.namaJenis ?? '-',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.selectedJenis.value = value;
+                          }
+                        },
+                        dropdownColor: Colors.white,
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: Color(0xFFD0D5DD), size: 24),
+                        isExpanded: true,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.black),
+                        menuMaxHeight: screenHeight * 0.3,
+                        elevation: 8,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Jenis Tabung harus dipilih';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Status Tabung',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide:
+                                const BorderSide(color: Color(0xFFD0D5DD)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          prefixIcon: const Icon(Icons.check_circle_outline,
+                              size: 20, color: Color(0xFFD0D5DD)),
+                          hintText: 'Pilih Status',
+                          hintStyle: const TextStyle(fontSize: 14),
+                          errorText: controller.fieldErrors['id_status_tabung'],
+                        ),
+                        value: controller.statusTabungList.any((status) =>
+                                status.statusTabung ==
+                                controller.selectedStatus.value)
+                            ? controller.selectedStatus.value
+                            : controller.statusTabungList.isNotEmpty
+                                ? controller.statusTabungList.first.statusTabung
+                                : null,
+                        items: controller.statusTabungList
+                            .map((status) => DropdownMenuItem<String>(
+                                  value: status.statusTabung,
+                                  child: Text(
+                                    status.statusTabung ?? '-',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            controller.selectedStatus.value = value;
+                          }
+                        },
+                        dropdownColor: Colors.white,
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: Color(0xFFD0D5DD), size: 24),
+                        isExpanded: true,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.black),
+                        menuMaxHeight: screenHeight * 0.3,
+                        elevation: 8,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Status Tabung harus dipilih';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: controller.isLoadingTabung.value
+                              ? null
+                              : _cancelEdit,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: AppColors.secondary),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: Text(
+                            'Batal',
+                            style: TextStyle(
+                                color: AppColors.secondary, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: controller.isLoadingTabung.value
+                              ? null
+                              : _saveTabung,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: controller.isLoadingTabung.value
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Simpan',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}

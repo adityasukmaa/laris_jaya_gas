@@ -20,6 +20,8 @@ class Tabung {
     this.idStatusTabung,
     this.namaJenis,
     this.qrCode,
+    this.jenisTabung,
+    this.statusTabung,
   });
 
   factory Tabung.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,12 @@ class Tabung {
       idJenisTabung: json['id_jenis_tabung'],
       idStatusTabung: json['id_status_tabung'],
       namaJenis: json['nama_jenis'],
+      jenisTabung: json['jenis_tabung'] != null
+          ? JenisTabung.fromJson(json['jenis_tabung'] as Map<String, dynamic>)
+          : null,
+      statusTabung: json['status_tabung'] != null
+          ? StatusTabung.fromJson(json['status_tabung'] as Map<String, dynamic>)
+          : null,
     );
   }
 

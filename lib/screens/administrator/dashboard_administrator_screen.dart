@@ -299,7 +299,9 @@ class DashboardAdministratorScreen extends StatelessWidget {
                             _buildMenuCard('Riwayat', Icons.history,
                                 '$historyCount', Colors.white, () {}),
                             _buildMenuCard('Data Pelanggan', Icons.people,
-                                '$customerCount', Colors.white, () {}),
+                                '$customerCount', Colors.white, () {
+                              Get.toNamed('/administrator/data-pelanggan');
+                            }),
                           ],
                         ),
                         const SizedBox(height: 16),

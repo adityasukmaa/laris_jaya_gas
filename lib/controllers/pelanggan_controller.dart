@@ -85,14 +85,15 @@ class PelangganController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await apiService.getTabungAktif();
+      final response = await apiService.getTabungAktifPelanggan();
 
       if (response['success']) {
         activeCylinders.value = (response['data'] as List<dynamic>)
             .map((item) => Tabung.fromJson(item))
             .toList();
       } else {
-        errorMessage.value = response['message'] ?? 'Gagal mengambil tabung aktif';
+        errorMessage.value =
+            response['message'] ?? 'Gagal mengambil tabung aktif';
         Get.snackbar(
           'Error',
           errorMessage.value,
@@ -128,7 +129,8 @@ class PelangganController extends GetxController {
             .map((item) => Transaksi.fromJson(item))
             .toList();
       } else {
-        errorMessage.value = response['message'] ?? 'Gagal mengambil riwayat transaksi';
+        errorMessage.value =
+            response['message'] ?? 'Gagal mengambil riwayat transaksi';
         Get.snackbar(
           'Error',
           errorMessage.value,
