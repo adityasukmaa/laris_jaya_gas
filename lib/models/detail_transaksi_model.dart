@@ -7,7 +7,6 @@ class DetailTransaksi {
   final String? idTabung;
   final String? idJenisTransaksi;
   final double? harga;
-  final double? totalTransaksi;
   final DateTime? batasWaktuPeminjaman;
   final Tabung? tabung;
   final JenisTransaksi? jenisTransaksi;
@@ -18,7 +17,6 @@ class DetailTransaksi {
     this.idTabung,
     this.idJenisTransaksi,
     this.harga,
-    this.totalTransaksi,
     this.batasWaktuPeminjaman,
     this.tabung,
     this.jenisTransaksi,
@@ -31,7 +29,6 @@ class DetailTransaksi {
       idTabung: json['id_tabung']?.toString(),
       idJenisTransaksi: json['id_jenis_transaksi']?.toString(),
       harga: (json['harga'] as num?)?.toDouble(),
-      totalTransaksi: (json['total_transaksi'] as num?)?.toDouble(),
       batasWaktuPeminjaman: json['batas_waktu_peminjaman'] != null
           ? DateTime.tryParse(json['batas_waktu_peminjaman'])
           : null,
@@ -49,7 +46,6 @@ class DetailTransaksi {
       'id_tabung': idTabung,
       'id_jenis_transaksi': idJenisTransaksi,
       'harga': harga,
-      'total_transaksi': totalTransaksi,
       'batas_waktu_peminjaman': batasWaktuPeminjaman?.toIso8601String(),
       'tabung': tabung?.toJson(),
       'jenis_transaksi': jenisTransaksi?.toJson(),

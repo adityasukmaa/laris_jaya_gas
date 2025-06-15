@@ -8,6 +8,7 @@ class Transaksi {
   final String? idPerusahaan;
   final String? tanggalTransaksi;
   final String? waktuTransaksi;
+  final double? totalTransaksi;
   final double? jumlahDibayar;
   final String? metodePembayaran;
   final String? idStatusTransaksi;
@@ -22,6 +23,7 @@ class Transaksi {
     this.idPerusahaan,
     this.tanggalTransaksi,
     this.waktuTransaksi,
+    this.totalTransaksi,
     this.jumlahDibayar,
     this.metodePembayaran,
     this.idStatusTransaksi,
@@ -38,7 +40,12 @@ class Transaksi {
       idPerusahaan: json['id_perusahaan']?.toString(),
       tanggalTransaksi: json['tanggal_transaksi'],
       waktuTransaksi: json['waktu_transaksi'],
-      jumlahDibayar: (json['jumlah_dibayar'] != null) ? double.tryParse(json['jumlah_dibayar'].toString()) : null,
+      totalTransaksi: (json['total_transaksi'] != null)
+          ? double.tryParse(json['total_transaksi'].toString())
+          : null,
+      jumlahDibayar: (json['jumlah_dibayar'] != null)
+          ? double.tryParse(json['jumlah_dibayar'].toString())
+          : null,
       metodePembayaran: json['metode_pembayaran'],
       idStatusTransaksi: json['id_status_transaksi']?.toString(),
       tanggalJatuhTempo: json['tanggal_jatuh_tempo'],
@@ -61,6 +68,7 @@ class Transaksi {
       'id_perusahaan': idPerusahaan,
       'tanggal_transaksi': tanggalTransaksi,
       'waktu_transaksi': waktuTransaksi,
+      'total_transaksi': totalTransaksi,
       'jumlah_dibayar': jumlahDibayar,
       'metode_pembayaran': metodePembayaran,
       'id_status_transaksi': idStatusTransaksi,

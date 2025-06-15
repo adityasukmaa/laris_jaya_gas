@@ -157,7 +157,7 @@ class AppRoutes {
             body: Center(child: Text('ID Tabung Tidak Ditemukan')),
           );
         }
-        return DetailTabungScreen(idTabung: idTabung.toString());
+        return DetailTabungScreen(idTabung: idTabung);
       },
       binding: BindingsBuilder(() {
         Get.put(TabungController());
@@ -181,7 +181,7 @@ class AppRoutes {
             body: Center(child: Text('Kode Tabung Tidak Ditemukan')),
           );
         }
-        return EditTabungScreen();
+        return EditTabungScreen(idTabung: idTabung);
       },
       binding: BindingsBuilder(() {
         Get.put(TabungController());
@@ -216,7 +216,7 @@ class AppRoutes {
     GetPage(
       name: editDataPelanggan,
       page: () {
-        return EditDataPelangganScreen();
+        return EditPelangganScreen();
       },
       transition: Transition.rightToLeft,
     ),
