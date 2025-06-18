@@ -199,19 +199,19 @@ class AppRoutes {
       transition: Transition.rightToLeft,
     ),
     GetPage(
-      name: tambahPelanggan,
-      page: () => TambahPelangganScreen(),
-      binding: BindingsBuilder(() {
-        Get.put(ManagePelangganController());
-      }),
-    ),
-    GetPage(
       name: detailDataPelanggan,
       page: () {
         final id = Get.arguments as int;
         return DetailDataPelangganScreen(idPelanggan: id);
       },
       transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: tambahPelanggan,
+      page: () => TambahPelangganScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(ManagePelangganController());
+      }),
     ),
     GetPage(
       name: editDataPelanggan,

@@ -115,10 +115,10 @@ class TabungController extends GetxController {
       }
     } catch (e) {
       errorMessageDetail.value = 'Gagal memuat detail tabung: ${e.toString()}';
-      Get.snackbar('Error', errorMessageDetail.value,
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: AppColors.redFlame,
-          colorText: Colors.white);
+      // Get.snackbar('Error', errorMessageDetail.value,
+      //     snackPosition: SnackPosition.TOP,
+      //     backgroundColor: AppColors.redFlame,
+      //     colorText: Colors.white);
     } finally {
       isLoadingDetail.value = false;
     }
@@ -161,7 +161,8 @@ class TabungController extends GetxController {
             colorText: Colors.white);
       }
     } catch (e) {
-      errorMessageTabung.value = 'Gagal menambahkan tabung: ${e.toString()}';
+      errorMessageTabung.value = e.toString().replaceFirst('Exception: ', '');
+
       Get.snackbar('Error', errorMessageTabung.value,
           snackPosition: SnackPosition.TOP,
           backgroundColor: AppColors.redFlame,

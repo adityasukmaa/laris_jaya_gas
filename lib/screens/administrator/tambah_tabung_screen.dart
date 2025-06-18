@@ -86,9 +86,13 @@ class TambahTabungScreen extends StatelessWidget {
                           if (value == null || value.trim().isEmpty) {
                             return 'Kode Tabung tidak boleh kosong';
                           }
-                          if (!RegExp(r'^[A-Z0-9]{5,10}$')
+                          if (!RegExp(r'^[A-Z0-9]{2,10}$')
                               .hasMatch(value.trim())) {
-                            return 'Kode harus 5-10 karakter alfanumerik';
+                            return 'Kode harus 2-10 karakter alfanumerik';
+                          }
+                          if (controller.tabungList.any(
+                              (tabung) => tabung.kodeTabung == value.trim())) {
+                            return 'Kode Tabung sudah ada';
                           }
                           return null;
                         },

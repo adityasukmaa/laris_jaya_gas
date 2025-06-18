@@ -51,6 +51,5 @@ com.example.laris_jaya_gas.app-merged_res-49 D:\Ngebacode\Flutter\laris_jaya_gas
 com.example.laris_jaya_gas.app-packaged_res-50 D:\Ngebacode\Flutter\laris_jaya_gas\build\device_info_plus\intermediates\packaged_res\debug
 com.example.laris_jaya_gas.app-packaged_res-51 D:\Ngebacode\Flutter\laris_jaya_gas\build\flutter_local_notifications\intermediates\packaged_res\debug
 com.example.laris_jaya_gas.app-packaged_res-52 D:\Ngebacode\Flutter\laris_jaya_gas\build\mobile_scanner\intermediates\packaged_res\debug
-com.example.laris_jaya_gas.app-packaged_res-53 D:\Ngebacode\Flutter\laris_jaya_gas\build\path_provider_android\intermediates\packaged_res\debug
-com.example.laris_jaya_gas.app-packaged_res-54 D:\Ngebacode\Flutter\laris_jaya_gas\build\permission_handler_android\intermediates\packaged_res\debug
-com.example.laris_jaya_gas.app-packaged_res-55 D:\Ngebacode\Flutter\laris_jaya_gas\build\shared_preferences_android\intermediates\packaged_res\debug
+com.example.laris_jaya_gas.app-packaged_res-53 D:\Ngebacode\Flutter\laris_jaya_gas\build\permission_handler_android\intermediates\packaged_res\debug
+com.example.laris_jaya_gas.app-packaged_res-54 D:\Ngebacode\Flutter\laris_jaya_gas\build\shared_preferences_android\intermediates\packaged_res\debug

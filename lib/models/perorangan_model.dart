@@ -1,3 +1,6 @@
+import 'package:laris_jaya_gas/models/akun_model.dart';
+import 'package:laris_jaya_gas/models/perusahaan_model.dart';
+
 class Perorangan {
   final int? idPerorangan;
   final String? namaLengkap;
@@ -6,6 +9,8 @@ class Perorangan {
   final String? alamat;
   final int? idPerusahaan;
   final String? namaPerusahaan;
+  final Akun? akun;
+  final Perusahaan? perusahaan;
 
   Perorangan({
     this.idPerorangan,
@@ -15,6 +20,8 @@ class Perorangan {
     this.alamat,
     this.idPerusahaan,
     this.namaPerusahaan,
+    this.akun,
+    this.perusahaan,
   });
 
   factory Perorangan.fromJson(Map<String, dynamic> json) {
@@ -25,6 +32,10 @@ class Perorangan {
       noTelepon: json['no_telepon'],
       alamat: json['alamat'],
       idPerusahaan: json['id_perusahaan'],
+      akun: json['akun'] != null ? Akun.fromJson(json['akun']) : null,
+      perusahaan: json['perusahaan'] != null
+          ? Perusahaan.fromJson(json['perusahaan'])
+          : null,
     );
   }
 
@@ -36,6 +47,8 @@ class Perorangan {
       'no_telepon': noTelepon,
       'alamat': alamat,
       'id_perusahaan': idPerusahaan,
+      'akun': akun?.toJson(),
+      'perusahaan': perusahaan?.toJson(),
     };
   }
 }
