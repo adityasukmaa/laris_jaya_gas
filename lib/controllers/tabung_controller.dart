@@ -115,10 +115,6 @@ class TabungController extends GetxController {
       }
     } catch (e) {
       errorMessageDetail.value = 'Gagal memuat detail tabung: ${e.toString()}';
-      // Get.snackbar('Error', errorMessageDetail.value,
-      //     snackPosition: SnackPosition.TOP,
-      //     backgroundColor: AppColors.redFlame,
-      //     colorText: Colors.white);
     } finally {
       isLoadingDetail.value = false;
     }
@@ -139,12 +135,15 @@ class TabungController extends GetxController {
         idStatusTabung: idStatusTabung,
       );
 
-      if (response['success']) {
+      if (response['success'] == true) {
+        tabungList.add(Tabung.fromJson(response['data']));
         Get.snackbar(
-            'Sukses', response['message'] ?? 'Tabung berhasil ditambahkan',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: AppColors.greenSuccess,
-            colorText: Colors.white);
+          'Sukses',
+          response['message'] ?? 'Tabung berhasil ditambahkan',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: AppColors.greenSuccess,
+          colorText: Colors.white,
+        );
         await fetchAllTabung();
         Get.offNamed('/administrator/stok-tabung');
       } else {
@@ -152,21 +151,32 @@ class TabungController extends GetxController {
             response['message'] ?? 'Gagal menambahkan tabung';
         if (response['data'] is Map) {
           (response['data'] as Map<String, dynamic>).forEach((key, value) {
-            fieldErrors[key] = (value is List) ? value[0] : value.toString();
+            fieldErrors[key] =
+                (value is List) ? value.join(', ') : value.toString();
           });
         }
-        Get.snackbar('Error', errorMessageTabung.value,
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: AppColors.redFlame,
-            colorText: Colors.white);
+        // Tampilkan snackbar error sebelum kembali ke halaman sebelumnya
+        Get.snackbar(
+          'Error',
+          errorMessageTabung.value,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: AppColors.redFlame,
+          colorText: Colors.white,
+        );
+        // Jangan offNamed jika gagal, biarkan user tetap di halaman form
+        // throw Exception(errorMessageTabung.value); // Tidak perlu lempar error ke UI
       }
     } catch (e) {
       errorMessageTabung.value = e.toString().replaceFirst('Exception: ', '');
-
-      Get.snackbar('Error', errorMessageTabung.value,
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: AppColors.redFlame,
-          colorText: Colors.white);
+      print('CreateTabung Error: $e, Field Errors: ${fieldErrors}');
+      Get.snackbar(
+        'Error',
+        errorMessageTabung.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: AppColors.redFlame,
+        colorText: Colors.white,
+      );
+      // Jangan offNamed jika gagal, biarkan user tetap di halaman form
     } finally {
       isLoadingTabung.value = false;
     }
@@ -195,14 +205,15 @@ class TabungController extends GetxController {
             snackPosition: SnackPosition.TOP,
             backgroundColor: AppColors.greenSuccess,
             colorText: Colors.white);
+        Get.back(); // kembali ke halaman sebelumnya
         await fetchTabungById(id);
-        Get.offNamed('/administrator/detail-tabung', arguments: id);
       } else {
         errorMessageTabung.value =
             response['message'] ?? 'Gagal memperbarui tabung';
         if (response['data'] is Map) {
           (response['data'] as Map<String, dynamic>).forEach((key, value) {
-            fieldErrors[key] = (value is List) ? value[0] : value.toString();
+            fieldErrors[key] =
+                (value is List) ? value.join(', ') : value.toString();
           });
         }
         Get.snackbar('Error', errorMessageTabung.value,

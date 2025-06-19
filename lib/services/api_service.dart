@@ -272,7 +272,8 @@ class ApiService {
 
   Future<Perorangan> updatePelanggan(int id, Map<String, dynamic> data) async {
     try {
-      final response = await putRequest('administrator/pelanggan/$id', data: data);
+      final response =
+          await putRequest('administrator/pelanggan/$id', data: data);
       return Perorangan.fromJson(response['data']);
     } catch (e) {
       throw _handleError(e, 'Gagal memperbarui pelanggan');
