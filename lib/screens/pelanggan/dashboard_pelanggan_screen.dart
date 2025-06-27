@@ -500,10 +500,10 @@ class DashboardPelangganScreen extends StatelessWidget {
                   subtitle: Text(
                       'Tanggal: ${transaction.tanggalTransaksi ?? 'Unknown'}'),
                   trailing: Text(
-                    transaction.statusTransaksi?.status ?? 'Unknown',
+                    transaction.statusTransaksi?? 'Unknown',
                     style: TextStyle(
                       color:
-                          transaction.statusTransaksi?.status?.toLowerCase() ==
+                          transaction.statusTransaksi?.toLowerCase() ==
                                   'success'
                               ? Colors.green
                               : Colors.grey,

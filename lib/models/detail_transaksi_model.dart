@@ -6,8 +6,11 @@ class DetailTransaksi {
   final String? idTransaksi;
   final String? idTabung;
   final String? idJenisTransaksi;
+  final String? kodeTabung;
+  final String? namaJenisTransaksi;
   final double? harga;
   final DateTime? batasWaktuPeminjaman;
+  final Map<String, dynamic>? peminjaman;
   final Tabung? tabung;
   final JenisTransaksi? jenisTransaksi;
 
@@ -16,8 +19,11 @@ class DetailTransaksi {
     this.idTransaksi,
     this.idTabung,
     this.idJenisTransaksi,
+    this.kodeTabung,
+    this.namaJenisTransaksi,
     this.harga,
     this.batasWaktuPeminjaman,
+    this.peminjaman,
     this.tabung,
     this.jenisTransaksi,
   });
@@ -28,13 +34,21 @@ class DetailTransaksi {
       idTransaksi: json['id_transaksi']?.toString(),
       idTabung: json['id_tabung']?.toString(),
       idJenisTransaksi: json['id_jenis_transaksi']?.toString(),
-      harga: (json['harga'] as num?)?.toDouble(),
-      batasWaktuPeminjaman: json['batas_waktu_peminjaman'] != null
-          ? DateTime.tryParse(json['batas_waktu_peminjaman'])
+      kodeTabung: json['kode_tabung'] as String?,
+      namaJenisTransaksi: json['jenis_transaksi'] as String?,
+      harga: (json['harga'] != null)
+          ? double.tryParse(json['harga'].toString())
           : null,
-      tabung: json['tabung'] != null ? Tabung.fromJson(json['tabung']) : null,
-      jenisTransaksi: json['jenis_transaksi'] != null
-          ? JenisTransaksi.fromJson(json['jenis_transaksi'])
+      batasWaktuPeminjaman: json['batas_waktu_peminjaman'] != null
+          ? DateTime.tryParse(json['batas_waktu_peminjaman'] as String)
+          : null,
+      peminjaman: json['peminjaman'] as Map<String, dynamic>?,
+      tabung: json['tabung'] != null
+          ? Tabung.fromJson(json['tabung'] as Map<String, dynamic>)
+          : null,
+      jenisTransaksi: json['jenis_transaksi'] is Map<String, dynamic>
+          ? JenisTransaksi.fromJson(
+              json['jenis_transaksi'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -45,8 +59,11 @@ class DetailTransaksi {
       'id_transaksi': idTransaksi,
       'id_tabung': idTabung,
       'id_jenis_transaksi': idJenisTransaksi,
+      'kode_tabung': kodeTabung,
+      'nama_jenis_transaksi': namaJenisTransaksi,
       'harga': harga,
       'batas_waktu_peminjaman': batasWaktuPeminjaman?.toIso8601String(),
+      'peminjaman': peminjaman,
       'tabung': tabung?.toJson(),
       'jenis_transaksi': jenisTransaksi?.toJson(),
     };

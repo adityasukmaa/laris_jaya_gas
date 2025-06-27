@@ -4,11 +4,12 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:laris_jaya_gas/models/perorangan_model.dart';
 import 'package:laris_jaya_gas/models/tabung_model.dart';
+import 'package:laris_jaya_gas/models/transaksi_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // Ganti dengan URL API Laravel Anda
-  static String _baseUrl = 'http://192.168.96.150:8000/api';
+  static String _baseUrl = 'http://192.168.76.150:8000/api';
 
   // SharedPreferences untuk menyimpan token
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -51,6 +52,9 @@ class ApiService {
 
       final finalHeaders =
           headers != null ? {...defaultHeaders, ...headers} : defaultHeaders;
+
+      print('Request URL: $_baseUrl/$endpoint');
+      print('Request Headers: $finalHeaders');
 
       final response = await http.get(
         Uri.parse('$_baseUrl/$endpoint'),
@@ -156,15 +160,47 @@ class ApiService {
     }
   }
 
+  Map<String, dynamic> _parseJson(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      } else {
+        throw Exception('Response is not a valid JSON object: $body');
+      }
+    } catch (e) {
+      throw Exception('Failed to parse JSON: $body');
+    }
+  }
+
   // Handle HTTP response
   Map<String, dynamic> _handleResponse(http.Response response) {
-    final responseBody = jsonDecode(response.body);
+    print('Response Status: ${response.statusCode}');
+    print('Response Body: ${response.body}');
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseBody;
+      try {
+        return _parseJson(response.body);
+      } catch (e) {
+        throw Exception('Failed to parse response as JSON: ${response.body}');
+      }
     } else {
-      throw Exception(responseBody['message'] ??
-          'Permintaan gagal dengan status: ${response.statusCode}');
+      String errorMessage = response.body.isNotEmpty
+          ? response.body
+          : 'No error message provided';
+      if (response.statusCode == 401) {
+        throw Exception(
+            'Unauthorized: Invalid or missing token - $errorMessage');
+      } else if (response.statusCode == 403) {
+        throw Exception('Forbidden: Access denied - $errorMessage');
+      } else if (response.statusCode == 404) {
+        throw Exception('Not Found: Endpoint does not exist - $errorMessage');
+      } else if (response.statusCode == 500) {
+        throw Exception('Internal Server Error: $errorMessage');
+      } else {
+        throw Exception(
+            'Request failed with status: ${response.statusCode} - $errorMessage');
+      }
     }
   }
 
@@ -234,6 +270,88 @@ class ApiService {
     }
   }
 
+  // --- Fungsi Transaksi ---
+
+  Future<List<Transaksi>> getAllTransaksi() async {
+    try {
+      final response = await getRequest('administrator/transaksi');
+      print('getAllTransaksi Response: ${jsonEncode(response)}');
+      if (response['success'] == true && response['data'] != null) {
+        final dataList = response['data'] as List<dynamic>;
+        print('Parsing ${dataList.length} transaksi');
+        return dataList.asMap().entries.map((entry) {
+          try {
+            final json = entry.value as Map<String, dynamic>;
+            print(
+                'Parsing transaksi[${entry.key}]: id_transaksi=${json['id_transaksi']} (${json['id_transaksi'].runtimeType}), total_transaksi=${json['total_transaksi']} (${json['total_transaksi'].runtimeType})');
+            return Transaksi.fromJson(json);
+          } catch (e) {
+            print('Error parsing transaksi at index ${entry.key}: $e');
+            throw e;
+          }
+        }).toList();
+      } else {
+        throw Exception(
+            'No transactions found: ${response['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      print('Error fetching transactions: $e');
+      rethrow;
+    }
+  }
+
+  Future<Transaksi> getTransaksiById(String id) async {
+    try {
+      final response = await getRequest('administrator/transaksi/$id');
+      if (response['success'] == true && response['data'] != null) {
+        return Transaksi.fromJson(response['data']);
+      }
+      throw Exception('Transaksi tidak ditemukan');
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil detail transaksi');
+    }
+  }
+
+  Future<Transaksi> createTransaksi(Map<String, dynamic> data) async {
+    try {
+      final response = await postRequest('administrator/transaksi', data: data);
+      if (response['status'] == 'sukses' && response['data'] != null) {
+        return Transaksi.fromJson(response['data']);
+      }
+      throw Exception(response['pesan'] ?? 'Gagal membuat transaksi');
+    } catch (e) {
+      throw _handleError(e, 'Gagal membuat transaksi');
+    }
+  }
+
+  Future<Transaksi> updateTransaksi(
+      String id, Map<String, dynamic> data) async {
+    try {
+      final response =
+          await putRequest('administrator/transaksi/$id', data: data);
+      if (response['success'] == true && response['data'] != null) {
+        return Transaksi.fromJson(response['data']);
+      }
+      throw Exception(response['message'] ?? 'Gagal memperbarui transaksi');
+    } catch (e) {
+      throw _handleError(e, 'Gagal memperbarui transaksi');
+    }
+  }
+
+  Future<List<Transaksi>> getRiwayatTransaksi() async {
+    try {
+      final response = await getRequest('administrator/transaksi/riwayat');
+      if (response['success'] == true && response['data'] != null) {
+        return (response['data'] as List<dynamic>)
+            .map((json) => Transaksi.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw _handleError(e, 'Gagal mengambil riwayat transaksi');
+    }
+  }
+
   // --- Fungsi CRUD Pelanggan ---
 
   Future<List<Perorangan>> getAllPelanggan() async {
@@ -289,9 +407,14 @@ class ApiService {
   }
 
   // Get all tabung (Admin)
-  Future<List<Tabung>> getAllTabung() async {
+  Future<List<Tabung>> getAllTabung({String? status}) async {
     try {
-      final response = await getRequest('administrator/tabung');
+      String endpoint = 'administrator/tabung';
+      if (status != null) {
+        endpoint += '?status=$status';
+      }
+
+      final response = await getRequest(endpoint);
       if (response['success'] && response['data'] != null) {
         return (response['data'] as List)
             .map((json) => Tabung.fromJson(json))
@@ -320,7 +443,7 @@ class ApiService {
   Future<Tabung?> getTabungByKode(String kodeTabung) async {
     try {
       final response = await getRequest(
-        'administrator/tabung/kode?kode_tabung=$kodeTabung',
+        'administrator/tabung-kode?kode_tabung=$kodeTabung',
       );
       if (response['success'] && response['data'] != null) {
         return Tabung.fromJson(response['data']);
@@ -384,18 +507,43 @@ class ApiService {
     }
   }
 
-// Get tabung tersedia (Pelanggan)
-  Future<List<Map<String, dynamic>>> getTabungTersedia() async {
+  /// Mengambil daftar tabung yang statusnya "tersedia".
+  /// Disederhanakan untuk fitur pemilihan oleh pelanggan.
+  Future<List<Tabung>> getTabungTersedia() async {
     try {
-      final response = await getRequest('pelanggan/tabung-tersedia');
-      if (response['success'] && response['data'] != null) {
-        return List<Map<String, dynamic>>.from(response['data']);
+      // Pastikan endpoint ini sesuai dengan yang Anda daftarkan di routes/api.php
+      // Contoh: Route::get('/pelanggan/tabung-tersedia', [ApiTabungController::class, 'getTabungsTersedia']);
+      final response = await getRequest('administrator/tabung-tersedia');
+
+      if (response['success'] == true && response['data'] != null) {
+        // Casting data sebagai List<dynamic>
+        final dataList = response['data'] as List<dynamic>;
+
+        // Mapping setiap item JSON ke objek TabungTersedia
+        return dataList.map((json) => Tabung.fromJson(json)).toList();
+      } else {
+        // Jika API mengembalikan success: false atau data null
+        throw Exception('Gagal memuat data tabung tersedia.');
       }
-      return [];
     } catch (e) {
-      throw _handleError(e, 'Gagal mengambil tabung tersedia');
+      // Melemparkan kembali error yang sudah ditangani oleh _handleError
+      // atau error parsing JSON.
+      throw _handleError(e, 'Gagal mengambil data tabung tersedia');
     }
   }
+
+// Get tabung tersedia (Pelanggan)
+  // Future<List<Map<String, dynamic>>> getTabungTersedia() async {
+  //   try {
+  //     final response = await getRequest('pelanggan/tabung-tersedia');
+  //     if (response['success'] && response['data'] != null) {
+  //       return List<Map<String, dynamic>>.from(response['data']);
+  //     }
+  //     return [];
+  //   } catch (e) {
+  //     throw _handleError(e, 'Gagal mengambil tabung tersedia');
+  //   }
+  // }
 
 // Get tabung aktif (Pelanggan)
   Future<List<Tabung>> getTabungAktif() async {

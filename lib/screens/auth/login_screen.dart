@@ -1,6 +1,8 @@
+import 'dart:convert'; // Impor untuk menggunakan jsonDecode
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:laris_jaya_gas/routes/app_routes.dart'; // Impor AppRoutes
 import '../../controllers/auth_controller.dart';
 import '../../widgets/primary_button.dart';
 
@@ -20,16 +22,40 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Reset errorMessage saat halaman dimuat
-    final AuthController authController = Get.find<AuthController>();
-    authController.errorMessage.value = '';
+    // Menjalankan reset state setelah frame pertama selesai di-build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final AuthController authController = Get.find<AuthController>();
+      authController.errorMessage.value = '';
+    });
   }
 
   @override
   void dispose() {
+    // Tidak perlu reset state di sini lagi
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // --- HELPER BARU UNTUK PARSING PESAN ERROR ---
+  String _parseErrorMessage(String rawError) {
+    // Contoh error: "Exception: Forbidden: Access denied - {"success":false,"message":"Akun Anda belum aktif. Silakan hubungi admin."}"
+    try {
+      // Periksa apakah pesan error mengandung objek JSON
+      if (rawError.contains('{') && rawError.contains('}')) {
+        final jsonStart = rawError.indexOf('{');
+        final jsonString = rawError.substring(jsonStart);
+        final decodedJson = jsonDecode(jsonString);
+        // Kembalikan value dari key 'message' jika ada, atau pesan default jika tidak
+        return decodedJson['message'] ??
+            'Terjadi kesalahan yang tidak diketahui.';
+      }
+    } catch (e) {
+      // Jika parsing gagal, bersihkan pesan error dari prefix "Exception: "
+      return rawError.replaceFirst('Exception: ', '');
+    }
+    // Jika tidak ada JSON, bersihkan pesan error dari prefix "Exception: "
+    return rawError.replaceFirst('Exception: ', '');
   }
 
   @override
@@ -85,15 +111,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onPressed: () => _handleSignIn(authController),
                               )),
                         const SizedBox(height: 12),
-                        Obx(() => authController.errorMessage.value.isNotEmpty
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 12),
+                        // --- PERBAIKAN TAMPILAN ERROR DI SINI ---
+                        Obx(() {
+                          final rawError = authController.errorMessage.value;
+                          if (rawError.isNotEmpty) {
+                            // Gunakan helper untuk mendapatkan pesan yang bersih
+                            final cleanMessage = _parseErrorMessage(rawError);
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Center(
+                                // Ditambahkan Center agar lebih rapi
                                 child: Text(
-                                  authController.errorMessage.value,
-                                  style: const TextStyle(color: Colors.red),
+                                  cleanMessage,
+                                  style: const TextStyle(
+                                      color: Colors.red, fontSize: 14),
+                                  textAlign: TextAlign.center,
                                 ),
-                              )
-                            : const SizedBox.shrink()),
+                              ),
+                            );
+                          } else {
+                            return const SizedBox.shrink();
+                          }
+                        }),
                         const Spacer(),
                         _buildSignUpPrompt(context),
                         const SizedBox(height: 40),
@@ -243,7 +282,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
-                  Get.toNamed('/register');
+                  // Menggunakan AppRoutes untuk navigasi yang aman dan konsisten
+                  Get.toNamed(AppRoutes.register);
                 },
             ),
           ],
@@ -253,17 +293,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleSignIn(AuthController authController) async {
+    // Bersihkan error lama sebelum mencoba login lagi
+    authController.errorMessage.value = '';
+
     if (!_formKey.currentState!.validate()) return;
 
     await authController.login(
       _emailController.text.trim(),
       _passwordController.text,
     );
-    if (authController.errorMessage.value.isNotEmpty) {
-      Get.snackbar('Error', authController.errorMessage.value,
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white);
-    }
+    // Tidak perlu menampilkan snackbar di sini jika pesan error sudah ditampilkan oleh Obx
   }
 }

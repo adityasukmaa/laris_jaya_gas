@@ -64,14 +64,6 @@ class AuthController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = e.toString().replaceFirst('Exception: ', '');
-      print('Login error: ${errorMessage.value}'); // Tambahkan log
-      Get.snackbar(
-        'Error',
-        errorMessage.value,
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
     } finally {
       isLoading.value = false;
     }

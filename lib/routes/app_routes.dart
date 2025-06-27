@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:laris_jaya_gas/controllers/manage_pelanggan_controller.dart';
+import 'package:laris_jaya_gas/controllers/transaksi_controller.dart';
 import 'package:laris_jaya_gas/screens/administrator/detail_data_pelanggan_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/detail_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/edit_pelanggan_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/edit_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/manage_pelanggan_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/manage_transaksi_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/qr_scan_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/stok_tabung_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_pelanggan_screen.dart';
 import 'package:laris_jaya_gas/screens/administrator/tambah_tabung_screen.dart';
+import 'package:laris_jaya_gas/screens/administrator/tambah_transaksi_screen.dart';
 import '../controllers/administrator_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/pelanggan_controller.dart';
@@ -54,6 +58,10 @@ class AppRoutes {
   static const String detailDataPelanggan =
       '/administrator/detail-data-pelanggan';
   static const String editDataPelanggan = '/administrator/edit-data-pelanggan';
+  static const String manageTransaksi = '/administrator/transaksi';
+  static const String tambahTransaksi = '/administrator/tambah-transaksi';
+  static const String detailTransaksi = '/administrator/detail-transaksi';
+  static const String qrScanTabung = '/administrator/qr-scan-tabung';
 
   // List of all routes with their respective pages and controller bindings
   static final routes = [
@@ -220,6 +228,38 @@ class AppRoutes {
       },
       transition: Transition.rightToLeft,
     ),
+    GetPage(
+      name: manageTransaksi,
+      page: () => ManageTransaksiScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(TransaksiController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: tambahTransaksi,
+      page: () => TambahTransaksiScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(TransaksiController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: qrScanTabung,
+      page: () => QrScanScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(TabungController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    // GetPage(
+    //   name: detailTransaksi,
+    //   page: () => DetailTransaksiScreen(),
+    //   binding: BindingsBuilder(() {
+    //     Get.put(TransaksiController());
+    //   }),
+    //   transition: Transition.rightToLeft,
+    // ),
     // GetPage(
     //   name: AppRoutes.qrScan,
     //   page: () {

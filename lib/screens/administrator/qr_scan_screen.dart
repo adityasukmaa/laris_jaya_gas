@@ -1,256 +1,129 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:mobile_scanner/mobile_scanner.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import '../../models/tabung_model.dart';
-// import '../../services/api_service.dart';
+import 'dart:async';
 
-// class QRScanScreen extends StatefulWidget {
-//   final Function(Map<String, dynamic>) onTabungSelected;
-//   final List<Map<String, dynamic>> selectedTabungs;
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:laris_jaya_gas/controllers/transaksi_controller.dart';
+import 'package:laris_jaya_gas/utils/constants.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
-//   const QRScanScreen({
-//     super.key,
-//     required this.onTabungSelected,
-//     required this.selectedTabungs,
-//   });
+// Mengubah menjadi StatefulWidget untuk mengelola state pemrosesan.
+class QrScanScreen extends StatefulWidget {
+  const QrScanScreen({super.key});
 
-//   @override
-//   State<QRScanScreen> createState() => _QRScanScreenState();
-// }
+  @override
+  State<QrScanScreen> createState() => _QrScanScreenState();
+}
 
-// class _QRScanScreenState extends State<QRScanScreen> {
-//   final MobileScannerController scannerController = MobileScannerController(
-//     formats: [BarcodeFormat.qrCode],
-//     detectionSpeed: DetectionSpeed.normal,
-//     facing: CameraFacing.back,
-//     torchEnabled: false,
-//   );
-//   late ApiService apiService;
-//   bool isProcessing = false;
+class _QrScanScreenState extends State<QrScanScreen> {
+  final MobileScannerController cameraController = MobileScannerController();
+  // Mengambil instance controller yang sudah ada menggunakan Get.find()
+  final TransaksiController transaksiController =
+      Get.find<TransaksiController>();
+  bool _isProcessing = false;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     SharedPreferences.getInstance().then((prefs) {
-//       apiService = ApiService(prefs);
-//     });
-//   }
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
+  }
 
-//   @override
-//   void dispose() {
-//     scannerController.stop();
-//     scannerController.dispose();
-//     super.dispose();
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pindai Kode QR Tabung'),
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flash_on),
+            color: Colors.white,
+            iconSize: 28.0,
+            tooltip: 'Senter',
+            onPressed: () => cameraController.toggleTorch(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.cameraswitch_outlined),
+            color: Colors.white,
+            iconSize: 28.0,
+            tooltip: 'Ganti Kamera',
+            onPressed: () => cameraController.switchCamera(),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          MobileScanner(
+            controller: cameraController,
+            onDetect: (capture) async {
+              // Mencegah deteksi berulang saat satu kode sedang diproses
+              if (_isProcessing) return;
 
-//   void _onDetect(BarcodeCapture barcodeCapture) async {
-//     if (isProcessing) return;
-//     isProcessing = true;
+              final List<Barcode> barcodes = capture.barcodes;
+              if (barcodes.isNotEmpty) {
+                final String? scannedCode = barcodes.first.rawValue;
 
-//     final String? kodeTabung = barcodeCapture.barcodes.isNotEmpty
-//         ? barcodeCapture.barcodes.first.rawValue
-//         : null;
-//     if (kodeTabung != null) {
-//       try {
-//         final tabung = await apiService.getTabungByKode(kodeTabung);
-//         if (tabung == null) {
-//           WidgetsBinding.instance.addPostFrameCallback((_) {
-//             Get.snackbar(
-//               'Error',
-//               'Kode tabung tidak ditemukan!',
-//               backgroundColor: Colors.red,
-//               colorText: Colors.white,
-//               snackPosition: SnackPosition.TOP,
-//             );
-//           });
-//           await Future.delayed(const Duration(milliseconds: 500));
-//           Get.back();
-//           return;
-//         }
+                if (scannedCode != null && scannedCode.isNotEmpty) {
+                  setState(() {
+                    _isProcessing = true;
+                  });
 
-//         if (tabung.statusTabung?.statusTabung.toLowerCase() == 'dipinjam') {
-//           WidgetsBinding.instance.addPostFrameCallback((_) {
-//             Get.snackbar(
-//               'Peringatan',
-//               'Tabung ${tabung.kodeTabung} sedang dipinjam!',
-//               backgroundColor: Colors.orange,
-//               colorText: Colors.white,
-//               snackPosition: SnackPosition.TOP,
-//             );
-//           });
-//           await Future.delayed(const Duration(milliseconds: 500));
-//           Get.back();
-//           return;
-//         }
+                  // Memanggil controller untuk validasi.
+                  // Controller akan otomatis menampilkan snackbar jika ada error.
+                  final tabung = await transaksiController
+                      .validateAndGetTabung(scannedCode);
 
-//         if (widget.selectedTabungs
-//             .any((t) => t['tabung'].kodeTabung == kodeTabung)) {
-//           WidgetsBinding.instance.addPostFrameCallback((_) {
-//             Get.snackbar(
-//               'Peringatan',
-//               'Tabung ${tabung.kodeTabung} sudah dipilih!',
-//               backgroundColor: Colors.orange,
-//               colorText: Colors.white,
-//               snackPosition: SnackPosition.TOP,
-//             );
-//           });
-//           await Future.delayed(const Duration(milliseconds: 500));
-//           Get.back();
-//           return;
-//         }
-
-//         await _showInitialTransactionDialog(tabung);
-//       } catch (e) {
-//         WidgetsBinding.instance.addPostFrameCallback((_) {
-//           Get.snackbar(
-//             'Error',
-//             'Gagal memproses tabung: $e',
-//             backgroundColor: Colors.red,
-//             colorText: Colors.white,
-//             snackPosition: SnackPosition.TOP,
-//           );
-//         });
-//         await Future.delayed(const Duration(milliseconds: 500));
-//         Get.back();
-//       }
-//     } else {
-//       WidgetsBinding.instance.addPostFrameCallback((_) {
-//         Get.snackbar(
-//           'Error',
-//           'Tidak ada QR code yang terdeteksi!',
-//           backgroundColor: Colors.red,
-//           colorText: Colors.white,
-//           snackPosition: SnackPosition.TOP,
-//         );
-//       });
-//       await Future.delayed(const Duration(milliseconds: 500));
-//       Get.back();
-//     }
-
-//     isProcessing = false;
-//   }
-
-//   Future<void> _showInitialTransactionDialog(Tabung tabung) async {
-//     String? selectedJenisTransaksi;
-
-//     await showDialog(
-//       context: context,
-//       builder: (context) {
-//         return StatefulBuilder(
-//           builder: (context, setState) {
-//             return AlertDialog(
-//               title: Text('Pilih Jenis Transaksi untuk ${tabung.kodeTabung}'),
-//               content: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: [
-//                   DropdownButtonFormField<String>(
-//                     value: selectedJenisTransaksi,
-//                     decoration: InputDecoration(
-//                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(8),
-//                       ),
-//                       labelText: 'Jenis Transaksi',
-//                     ),
-//                     items: const [
-//                       DropdownMenuItem(
-//                         value: 'peminjaman',
-//                         child: Text('Peminjaman'),
-//                       ),
-//                       DropdownMenuItem(
-//                         value: 'isi ulang',
-//                         child: Text('Isi Ulang'),
-//                       ),
-//                     ],
-//                     onChanged: (value) {
-//                       setState(() {
-//                         selectedJenisTransaksi = value;
-//                       });
-//                     },
-//                     validator: (value) =>
-//                         value == null ? 'Jenis Transaksi harus dipilih' : null,
-//                   ),
-//                 ],
-//               ),
-//               actions: [
-//                 TextButton(
-//                   onPressed: () => Get.back(),
-//                   child: const Text('Batal'),
-//                 ),
-//                 ElevatedButton(
-//                   onPressed: () {
-//                     if (selectedJenisTransaksi != null) {
-//                       widget.onTabungSelected({
-//                         'tabung': tabung,
-//                         'jenisTransaksi': selectedJenisTransaksi,
-//                       });
-//                       Get.back();
-//                     } else {
-//                       WidgetsBinding.instance.addPostFrameCallback((_) {
-//                         Get.snackbar(
-//                           'Error',
-//                           'Harap pilih jenis transaksi!',
-//                           backgroundColor: Colors.red,
-//                           colorText: Colors.white,
-//                           snackPosition: SnackPosition.TOP,
-//                         );
-//                       });
-//                     }
-//                   },
-//                   child: const Text('Pilih'),
-//                 ),
-//               ],
-//             );
-//           },
-//         );
-//       },
-//     );
-
-//     await scannerController.stop();
-//     Get.back();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.black,
-//       body: Stack(
-//         children: [
-//           MobileScanner(
-//             controller: scannerController,
-//             onDetect: _onDetect,
-//           ),
-//           Center(
-//             child: Container(
-//               height: 250,
-//               width: 250,
-//               decoration: BoxDecoration(
-//                 border: Border.all(color: Colors.white, width: 2),
-//                 borderRadius: BorderRadius.circular(8),
-//               ),
-//             ),
-//           ),
-//           Positioned(
-//             top: 50,
-//             left: 16,
-//             child: IconButton(
-//               icon: const Icon(Icons.arrow_back, color: Colors.white),
-//               onPressed: () async {
-//                 await scannerController.stop();
-//                 Get.back();
-//               },
-//             ),
-//           ),
-//           Positioned(
-//             top: 50,
-//             right: 16,
-//             child: IconButton(
-//               icon: const Icon(Icons.flash_on, color: Colors.white),
-//               onPressed: () => scannerController.toggleTorch(),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+                  // Jika validasi BERHASIL (tabung tidak null)
+                  if (tabung != null) {
+                    if (mounted) {
+                      // Kembali ke halaman form dengan membawa hasil kode yang valid
+                      Get.back(result: scannedCode);
+                    }
+                  } else {
+                    // Jika validasi GAGAL (tabung null), snackbar sudah ditampilkan oleh controller.
+                    // Beri jeda agar pengguna bisa membaca snackbar, lalu aktifkan kembali scanner.
+                    await Future.delayed(const Duration(seconds: 2));
+                    if (mounted) {
+                      setState(() {
+                        _isProcessing = false;
+                      });
+                    }
+                  }
+                }
+              }
+            },
+          ),
+          // Overlay untuk area scan
+          Center(
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.green.shade400, width: 3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          // Menampilkan loading indicator saat memvalidasi
+          if (_isProcessing)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 16),
+                    Text(
+                      'Memvalidasi Kode...',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

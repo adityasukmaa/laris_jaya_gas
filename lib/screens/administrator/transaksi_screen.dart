@@ -1,454 +1,411 @@
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
+// import 'package:mobile_scanner/mobile_scanner.dart';
 // import 'package:laris_jaya_gas/controllers/transaksi_controller.dart';
-// import 'package:laris_jaya_gas/models/perorangan_model.dart';
-// import 'package:laris_jaya_gas/models/perusahaan_model.dart';
-// import 'package:laris_jaya_gas/models/tagihan_model.dart';
-// import 'package:laris_jaya_gas/models/transaksi_model.dart';
-// import 'package:laris_jaya_gas/services/database_service.dart';
 // import 'package:laris_jaya_gas/utils/constants.dart';
-// import 'package:laris_jaya_gas/utils/dummy_data.dart';
 
-// class TransaksiScreen extends StatefulWidget {
-//   const TransaksiScreen({super.key});
+// class TransaksiScreen extends StatelessWidget {
+//   final TransaksiController controller = Get.put(TransaksiController());
+//   final _formKey = GlobalKey<FormState>();
 
-//   @override
-//   State<TransaksiScreen> createState() => _TransaksiScreenState();
-// }
-
-// class _TransaksiScreenState extends State<TransaksiScreen> {
-//   final DatabaseService _databaseService = DatabaseService();
-//   final TransaksiController _controller = Get.put(TransaksiController());
-//   List<Transaksi> _transaksis = [];
-//   bool _isLoading = true;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _fetchTransaksis();
-//   }
-
-//   Future<void> _fetchTransaksis() async {
-//     setState(() => _isLoading = true);
-//     try {
-//       final transaksis = await _databaseService.fetchTransaksiWithRelations();
-//       setState(() {
-//         _transaksis =
-//             transaksis.isNotEmpty ? transaksis : DummyData.transaksiList;
-//         _controller.filteredTransaksiList.value =
-//             _transaksis.whereType<Transaksi>().toList();
-//         _isLoading = false;
-//       });
-//     } catch (e) {
-//       setState(() {
-//         _transaksis = DummyData.transaksiList;
-//         _controller.filteredTransaksiList.value =
-//             _transaksis.whereType<Transaksi>().toList();
-//         _isLoading = false;
-//       });
-//     }
-//   }
+//   TransaksiScreen({super.key});
 
 //   @override
 //   Widget build(BuildContext context) {
-//     final double screenHeight = MediaQuery.of(context).size.height;
-//     final double paddingVertical = screenHeight * 0.02;
-
-//     final List<String> jenisTransaksiList = [
-//       'Semua',
-//       ...DummyData.jenisTransaksiList
-//           .map((jt) => jt.namaJenisTransaksi)
-//           .toList(),
-//     ];
-
-//     final List<String> statusTransaksiList = [
-//       'Semua',
-//       ...DummyData.statusTransaksiList.map((st) => st.status).toList(),
-//     ];
-
+//     final isLargeScreen = MediaQuery.of(context).size.width > 600;
 //     return Scaffold(
-//       backgroundColor: Colors.grey[100],
-//       appBar: AppBar(
-//         backgroundColor: AppColors.primaryBlue,
-//         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back, color: Colors.white),
-//           onPressed: () => Get.back(),
-//         ),
-//         title: const Text(
-//           'Transaksi',
-//           style: TextStyle(color: Colors.white, fontSize: 20),
+//       backgroundColor: AppColors.greyBackground,
+//       appBar: _buildAppBar(),
+//       body: Obx(() => _buildBody(context, isLargeScreen)),
+//       floatingActionButton: _buildFAB(),
+//     );
+//   }
+
+//   AppBar _buildAppBar() {
+//     return AppBar(
+//       backgroundColor: AppColors.primaryBlue,
+//       title: const Text('Buat Transaksi',
+//           style: TextStyle(color: AppColors.white)),
+//       iconTheme: const IconThemeData(color: AppColors.white),
+//       elevation: 4,
+//     );
+//   }
+
+//   Widget _buildBody(BuildContext context, bool isLargeScreen) {
+//     if (controller.isLoading.value) {
+//       return const Center(
+//           child: CircularProgressIndicator(color: AppColors.primaryBlue));
+//     }
+//     if (controller.errorMessage.isNotEmpty) {
+//       return _buildErrorState(context);
+//     }
+//     return Form(
+//       key: _formKey,
+//       child: SingleChildScrollView(
+//         padding: const EdgeInsets.all(AppSizes.padding),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             _buildPelangganSection(),
+//             const SizedBox(height: AppSizes.padding),
+//             _buildTanggalTransaksi(),
+//             const SizedBox(height: AppSizes.padding),
+//             _buildTabungSection(context),
+//             const SizedBox(height: AppSizes.padding),
+//             _buildDetailTransaksi(isLargeScreen),
+//             const SizedBox(height: AppSizes.padding),
+//             _buildPembayaranSection(),
+//           ],
 //         ),
 //       ),
-//       body: _isLoading
-//           ? const Center(child: CircularProgressIndicator())
-//           : SingleChildScrollView(
-//               child: Padding(
-//                 padding: EdgeInsets.symmetric(
-//                     vertical: paddingVertical, horizontal: 16.0),
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Obx(() => Container(
-//                           width: double.infinity,
-//                           padding: const EdgeInsets.all(16.0),
-//                           decoration: BoxDecoration(
-//                             gradient: LinearGradient(
-//                               colors: [
-//                                 AppColors.primaryBlue,
-//                                 AppColors.secondary
-//                               ],
-//                               begin: Alignment.topCenter,
-//                               end: Alignment.bottomCenter,
-//                             ),
-//                             borderRadius: BorderRadius.circular(8),
-//                           ),
-//                           child: Column(
-//                             crossAxisAlignment: CrossAxisAlignment.start,
-//                             children: [
-//                               Text(
-//                                 'Total Transaksi Berjalan: ${_controller.totalTransaksiBerjalan}',
-//                                 style: const TextStyle(
-//                                     color: Colors.white, fontSize: 14),
-//                               ),
-//                               const SizedBox(height: 4),
-//                               Text(
-//                                 'Total Transaksi Bulan Ini: ${_controller.totalTransaksiBulanIni}',
-//                                 style: const TextStyle(
-//                                     color: Colors.white, fontSize: 14),
-//                               ),
-//                             ],
-//                           ),
-//                         )),
-//                     const SizedBox(height: 16),
-//                     Row(
-//                       children: [
-//                         Expanded(
-//                           child: Obx(() => DropdownButtonFormField<String>(
-//                                 value: _controller.selectedJenisTransaksi.value,
-//                                 decoration: InputDecoration(
-//                                   labelText: 'Jenis Transaksi',
-//                                   labelStyle:
-//                                       const TextStyle(color: Colors.grey),
-//                                   border: OutlineInputBorder(
-//                                     borderRadius: BorderRadius.circular(8),
-//                                     borderSide:
-//                                         const BorderSide(color: Colors.grey),
-//                                   ),
-//                                   focusedBorder: OutlineInputBorder(
-//                                     borderRadius: BorderRadius.circular(8),
-//                                     borderSide: const BorderSide(
-//                                         color: AppColors.primaryBlue),
-//                                   ),
-//                                 ),
-//                                 items: jenisTransaksiList.map((String value) {
-//                                   return DropdownMenuItem<String>(
-//                                     value: value,
-//                                     child: Text(
-//                                       value,
-//                                       style: TextStyle(
-//                                         fontWeight: value ==
-//                                                 _controller
-//                                                     .selectedJenisTransaksi
-//                                                     .value
-//                                             ? FontWeight.normal
-//                                             : FontWeight.normal,
-//                                       ),
-//                                     ),
-//                                   );
-//                                 }).toList(),
-//                                 onChanged: (value) {
-//                                   if (value != null) {
-//                                     _controller.selectedJenisTransaksi.value =
-//                                         value;
-//                                   }
-//                                 },
-//                               )),
-//                         ),
-//                         const SizedBox(width: 16),
-//                         Expanded(
-//                           child: Obx(() => DropdownButtonFormField<String>(
-//                                 value:
-//                                     _controller.selectedStatusTransaksi.value,
-//                                 decoration: InputDecoration(
-//                                   labelText: 'Status Transaksi',
-//                                   labelStyle:
-//                                       const TextStyle(color: Colors.grey),
-//                                   border: OutlineInputBorder(
-//                                     borderRadius: BorderRadius.circular(8),
-//                                     borderSide:
-//                                         const BorderSide(color: Colors.grey),
-//                                   ),
-//                                   focusedBorder: OutlineInputBorder(
-//                                     borderRadius: BorderRadius.circular(8),
-//                                     borderSide: const BorderSide(
-//                                         color: AppColors.primaryBlue),
-//                                   ),
-//                                 ),
-//                                 items: statusTransaksiList.map((String value) {
-//                                   return DropdownMenuItem<String>(
-//                                     value: value,
-//                                     child: Text(
-//                                       value,
-//                                       style: TextStyle(
-//                                         fontWeight: value ==
-//                                                 _controller
-//                                                     .selectedStatusTransaksi
-//                                                     .value
-//                                             ? FontWeight.normal
-//                                             : FontWeight.normal,
-//                                       ),
-//                                     ),
-//                                   );
-//                                 }).toList(),
-//                                 onChanged: (value) {
-//                                   if (value != null) {
-//                                     _controller.selectedStatusTransaksi.value =
-//                                         value;
-//                                   }
-//                                 },
-//                               )),
-//                         ),
-//                       ],
-//                     ),
-//                     const SizedBox(height: 16),
-//                     ElevatedButton(
-//                       onPressed: () {
-//                         _controller.applyFilter();
-//                       },
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: AppColors.secondary,
-//                         minimumSize: const Size(double.infinity, 50),
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                       ),
-//                       child: const Text(
-//                         'Terapkan Filter',
-//                         style: TextStyle(color: Colors.white),
-//                       ),
-//                     ),
-//                     const SizedBox(height: 16),
-//                     Obx(() => ListView.builder(
-//                           shrinkWrap: true,
-//                           physics: const NeverScrollableScrollPhysics(),
-//                           itemCount: _controller.filteredTransaksiList.length,
-//                           itemBuilder: (context, index) {
-//                             final transaksi =
-//                                 _controller.filteredTransaksiList[index];
-//                             final isPeminjaman =
-//                                 transaksi.detailTransaksis?.isNotEmpty == true
-//                                     ? (transaksi
-//                                                 .detailTransaksis!
-//                                                 .first
-//                                                 .jenisTransaksi
-//                                                 ?.namaJenisTransaksi ??
-//                                             '') ==
-//                                         'peminjaman'
-//                                     : false;
-//                             final tagihan = DummyData.tagihanList.firstWhere(
-//                               (t) => t.idTransaksi == transaksi.idTransaksi,
-//                               orElse: () => Tagihan(
-//                                 idTagihan: '',
-//                                 idTransaksi: transaksi.idTransaksi,
-//                                 jumlahDibayar: 0,
-//                                 sisa: transaksi.detailTransaksis?.isNotEmpty ==
-//                                         true
-//                                     ? (transaksi
-//                                         .detailTransaksis!.first.totalTransaksi)
-//                                     : 0.0,
-//                                 status: 'belum_lunas',
-//                                 tanggalBayarTagihan: null,
-//                                 hariKeterlambatan: 0,
-//                                 periodeKe: 0,
-//                                 keterangan: '',
-//                               ),
-//                             );
+//     );
+//   }
 
-//                             String pelangganInfo = 'Unknown';
-//                             if (transaksi.idPerorangan != null) {
-//                               final perorangan = DummyData.peroranganList
-//                                   .firstWhere(
-//                                       (p) =>
-//                                           p.idPerorangan ==
-//                                           transaksi.idPerorangan,
-//                                       orElse: () => Perorangan(
-//                                             idPerorangan: '',
-//                                             namaLengkap: 'Unknown',
-//                                             nik: '',
-//                                             noTelepon: '',
-//                                             alamat: '',
-//                                             idPerusahaan: null,
-//                                           ));
-//                               pelangganInfo = perorangan.namaLengkap;
-//                             } else if (transaksi.idPerusahaan != null) {
-//                               final perusahaan = DummyData.perusahaanList
-//                                   .firstWhere(
-//                                       (p) =>
-//                                           p.idPerusahaan ==
-//                                           transaksi.idPerusahaan,
-//                                       orElse: () => Perusahaan(
-//                                             idPerusahaan: '',
-//                                             namaPerusahaan: 'Unknown',
-//                                             alamatPerusahaan: '',
-//                                             emailPerusahaan: '',
-//                                           ));
-//                               pelangganInfo = perusahaan.namaPerusahaan;
-//                             }
+//   Widget _buildErrorState(BuildContext context) {
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           Text(
+//             controller.errorMessage.value,
+//             style: const TextStyle(color: AppColors.redFlame, fontSize: 16),
+//             textAlign: TextAlign.center,
+//           ),
+//           const SizedBox(height: 16),
+//           ElevatedButton(
+//             onPressed: controller.fetchPelanggan,
+//             style: _buttonStyle(),
+//             child: const Text('Coba Lagi',
+//                 style: TextStyle(color: AppColors.white, fontSize: 16)),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
 
-//                             return GestureDetector(
-//                               onTap: () {
-//                                 Get.toNamed('/administrator/detail-transaksi',
-//                                         arguments: transaksi)
-//                                     ?.then((_) => _fetchTransaksis());
-//                               },
-//                               child: Card(
-//                                 elevation: 2,
-//                                 margin: const EdgeInsets.only(bottom: 8),
-//                                 shape: RoundedRectangleBorder(
-//                                   borderRadius: BorderRadius.circular(8),
-//                                 ),
-//                                 child: Padding(
-//                                   padding: const EdgeInsets.all(12.0),
-//                                   child: Column(
-//                                     crossAxisAlignment:
-//                                         CrossAxisAlignment.start,
-//                                     children: [
-//                                       Row(
-//                                         mainAxisAlignment:
-//                                             MainAxisAlignment.spaceBetween,
-//                                         children: [
-//                                           Text(
-//                                             transaksi.idTransaksi,
-//                                             style: const TextStyle(
-//                                               fontSize: 16,
-//                                               fontWeight: FontWeight.bold,
-//                                               color: Colors.black87,
-//                                             ),
-//                                           ),
-//                                         ],
-//                                       ),
-//                                       const SizedBox(height: 4),
-//                                       Text(
-//                                         'Pelanggan: $pelangganInfo',
-//                                         style: const TextStyle(
-//                                           fontSize: 14,
-//                                           color: Colors.grey,
-//                                         ),
-//                                       ),
-//                                       const SizedBox(height: 2),
-//                                       Text(
-//                                         'Jenis: ${transaksi.detailTransaksis?.isNotEmpty == true ? (transaksi.detailTransaksis!.first.jenisTransaksi?.namaJenisTransaksi ?? "Unknown") : "Unknown"}',
-//                                         style: const TextStyle(
-//                                           fontSize: 14,
-//                                           color: Colors.grey,
-//                                         ),
-//                                       ),
-//                                       const SizedBox(height: 4),
-//                                       Row(
-//                                         children: [
-//                                           Text(
-//                                             'Status: ${transaksi.statusTransaksi?.status ?? "Unknown"}',
-//                                             style: TextStyle(
-//                                               fontSize: 14,
-//                                               fontWeight: FontWeight.w500,
-//                                               color: (transaksi.statusTransaksi
-//                                                               ?.status ??
-//                                                           'Unknown') ==
-//                                                       'success'
-//                                                   ? Colors.green
-//                                                   : (transaksi.statusTransaksi
-//                                                                   ?.status ??
-//                                                               'Unknown') ==
-//                                                           'pending'
-//                                                       ? Colors.orange
-//                                                       : Colors.red,
-//                                             ),
-//                                           ),
-//                                           const SizedBox(width: 8),
-//                                           Container(
-//                                             padding: const EdgeInsets.symmetric(
-//                                               horizontal: 8,
-//                                               vertical: 2,
-//                                             ),
-//                                             decoration: BoxDecoration(
-//                                               color: (transaksi.statusTransaksi
-//                                                               ?.status ??
-//                                                           'Unknown') ==
-//                                                       'success'
-//                                                   ? Colors.green
-//                                                       .withOpacity(0.1)
-//                                                   : (transaksi.statusTransaksi
-//                                                                   ?.status ??
-//                                                               'Unknown') ==
-//                                                           'pending'
-//                                                       ? Colors.orange
-//                                                           .withOpacity(0.1)
-//                                                       : Colors.red
-//                                                           .withOpacity(0.1),
-//                                               borderRadius:
-//                                                   BorderRadius.circular(12),
-//                                             ),
-//                                             child: Text(
-//                                               transaksi.statusTransaksi
-//                                                       ?.status ??
-//                                                   "Unknown",
-//                                               style: TextStyle(
-//                                                 fontSize: 12,
-//                                                 color: (transaksi
-//                                                                 .statusTransaksi
-//                                                                 ?.status ??
-//                                                             'Unknown') ==
-//                                                         'success'
-//                                                     ? Colors.green
-//                                                     : (transaksi.statusTransaksi
-//                                                                     ?.status ??
-//                                                                 'Unknown') ==
-//                                                             'pending'
-//                                                         ? Colors.orange
-//                                                         : Colors.red,
-//                                               ),
-//                                             ),
-//                                           ),
-//                                         ],
-//                                       ),
-//                                       if (isPeminjaman) ...[
-//                                         const SizedBox(height: 4),
-//                                         Text(
-//                                           'Sisa Tagihan: Rp ${tagihan.sisa.toStringAsFixed(2)}',
-//                                           style: const TextStyle(
-//                                             fontSize: 14,
-//                                             color: Colors.grey,
-//                                           ),
-//                                         ),
-//                                       ],
-//                                     ],
-//                                   ),
-//                                 ),
-//                               ),
-//                             );
-//                           },
-//                         )),
-//                     const SizedBox(height: 80),
-//                   ],
+//   Widget _buildPelangganSection() {
+//     return Obx(() => DropdownButtonFormField<String>(
+//           value: controller.selectedPelanggan.value.isEmpty
+//               ? null
+//               : controller.selectedPelanggan.value,
+//           decoration: InputDecoration(
+//             labelText: 'Pilih Pelanggan',
+//             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//             filled: true,
+//             fillColor: AppColors.white,
+//             contentPadding:
+//                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//           ),
+//           items: controller.pelangganList.map((pelanggan) {
+//             final id = pelanggan.idAkun ?? pelanggan.idPerorangan;
+//             final nama = pelanggan.namaLengkap ??
+//                 pelanggan.email ??
+//                 pelanggan.namaPerusahaan ??
+//                 '-';
+//             return DropdownMenuItem(value: '$id', child: Text(nama));
+//           }).toList(),
+//           onChanged: (value) {
+//             if (value != null) {
+//               controller.selectedPelanggan.value = value;
+//             }
+//           },
+//           validator: (value) =>
+//               value == null ? 'Pilih pelanggan terlebih dahulu' : null,
+//         ));
+//   }
+
+//   Widget _buildTanggalTransaksi() {
+//     return Text(
+//       'Tanggal Transaksi: ${DateTime.now().toString().split(' ')[0]} ${DateTime.now().toString().split(' ')[1].substring(0, 8)}',
+//       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+//     );
+//   }
+
+//   Widget _buildTabungSection(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           children: [
+//             Expanded(
+//               child: TextFormField(
+//                 decoration: InputDecoration(
+//                   labelText: 'Kode Tabung',
+//                   border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(12)),
+//                   filled: true,
+//                   fillColor: AppColors.white,
 //                 ),
+//                 onChanged: (value) => controller.kodeTabung.value = value,
+//                 onFieldSubmitted: (value) => controller.validasiTabung(value),
 //               ),
 //             ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: () async {
-//           try {
-//             await Get.toNamed('/administrator/tambah-transaksi');
-//             _fetchTransaksis();
-//           } catch (e) {
-//             Get.snackbar(
-//               'Error',
-//               'Gagal membuka halaman tambah transaksi: $e',
-//               backgroundColor: Colors.red,
-//               colorText: Colors.white,
-//             );
-//           }
+//             const SizedBox(width: 8),
+//             ElevatedButton(
+//               onPressed: () => _navigateToScanner(context),
+//               style: _buttonStyle(),
+//               child: const Text('Scan QR',
+//                   style: TextStyle(color: AppColors.white)),
+//             ),
+//           ],
+//         ),
+//         Obx(() => controller.tabungData.isNotEmpty
+//             ? _buildTabungResult(context)
+//             : const SizedBox.shrink()),
+//       ],
+//     );
+//   }
+
+//   Widget _buildTabungResult(BuildContext context) {
+//     final tabung = controller.tabungData[0];
+//     return Card(
+//       elevation: 4,
+//       shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(AppSizes.cardRadius)),
+//       margin: const EdgeInsets.symmetric(vertical: 8),
+//       child: Padding(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text('Tabung: ${tabung['kode_tabung']} (${tabung['nama_jenis']})'),
+//             Text('Harga: Rp ${tabung['harga']})'),
+//             const SizedBox(height: 8),
+//             DropdownButtonFormField<String>(
+//               value: controller.selectedJenisTransaksi.value.isEmpty
+//                   ? null
+//                   : controller.selectedJenisTransaksi.value,
+//               decoration: InputDecoration(
+//                 labelText: 'Jenis Transaksi',
+//                 border:
+//                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//                 filled: true,
+//                 fillColor: AppColors.white,
+//               ),
+//               items: (tabung['opsi_transaksi'] as List<dynamic>)
+//                   .map<DropdownMenuItem<String>>(
+//                       (opsi) => DropdownMenuItem<String>(
+//                             value: opsi['nama'] as String,
+//                             child: Text(opsi['nama'] as String),
+//                           ))
+//                   .toList(),
+//               onChanged: (value) {
+//                 if (value != null) {
+//                   controller.selectedJenisTransaksi.value = value;
+//                 }
+//               },
+//               validator: (value) =>
+//                   value == null ? 'Pilih jenis transaksi' : null,
+//             ),
+//             const SizedBox(height: 8),
+//             ElevatedButton(
+//               onPressed: () {
+//                 if (_formKey.currentState!.validate()) {
+//                   controller.tambahDetail(
+//                       tabung, controller.selectedJenisTransaksi.value);
+//                 }
+//               },
+//               style: _buttonStyle(),
+//               child: const Text('Tambah ke Transaksi',
+//                   style: TextStyle(color: AppColors.white)),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildDetailTransaksi(bool isLargeScreen) {
+//     return Obx(() => Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             const Text('Detail Transaksi',
+//                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+//             const SizedBox(height: 8),
+//             controller.details.isEmpty
+//                 ? const Text('Belum ada tabung ditambahkan.',
+//                     style: TextStyle(color: Colors.grey))
+//                 : isLargeScreen
+//                     ? _buildDetailDataTable()
+//                     : _buildDetailListView(),
+//             const SizedBox(height: 8),
+//             Text('Total Transaksi: Rp ${controller.totalTransaksi.value}',
+//                 style:
+//                     const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+//           ],
+//         ));
+//   }
+
+//   Widget _buildDetailDataTable() {
+//     return SingleChildScrollView(
+//       scrollDirection: Axis.horizontal,
+//       child: DataTable(
+//         columnSpacing: 16,
+//         dataRowHeight: 60,
+//         headingRowColor:
+//             WidgetStateProperty.all(AppColors.primaryBlue.withOpacity(0.1)),
+//         columns: const [
+//           DataColumn(
+//               label: Text('Kode Tabung',
+//                   style: TextStyle(fontWeight: FontWeight.bold))),
+//           DataColumn(
+//               label:
+//                   Text('Jenis', style: TextStyle(fontWeight: FontWeight.bold))),
+//           DataColumn(
+//               label:
+//                   Text('Harga', style: TextStyle(fontWeight: FontWeight.bold))),
+//           DataColumn(
+//               label:
+//                   Text('Aksi', style: TextStyle(fontWeight: FontWeight.bold))),
+//         ],
+//         rows: controller.details.asMap().entries.map((entry) {
+//           final index = entry.key;
+//           final detail = entry.value;
+//           return DataRow(cells: [
+//             DataCell(Text(detail['id_tabung'].toString())),
+//             DataCell(Text(detail['id_jenis_transaksi'] == 1
+//                 ? 'Peminjaman'
+//                 : 'Isi Ulang')),
+//             DataCell(Text('Rp ${detail['harga']}')),
+//             DataCell(IconButton(
+//               icon: const Icon(Icons.delete, color: AppColors.redFlame),
+//               onPressed: () => controller.hapusDetail(index),
+//             )),
+//           ]);
+//         }).toList(),
+//       ),
+//     );
+//   }
+
+//   Widget _buildDetailListView() {
+//     return ListView.builder(
+//       shrinkWrap: true,
+//       physics: const NeverScrollableScrollPhysics(),
+//       itemCount: controller.details.length,
+//       itemBuilder: (context, index) {
+//         final detail = controller.details[index];
+//         return Card(
+//           elevation: 4,
+//           shape: RoundedRectangleBorder(
+//               borderRadius: BorderRadius.circular(AppSizes.cardRadius)),
+//           margin: const EdgeInsets.symmetric(vertical: 4),
+//           child: ListTile(
+//             title: Text('Tabung ID: ${detail['id_tabung']}'),
+//             subtitle: Text(
+//                 'Jenis: ${detail['id_jenis_transaksi'] == 1 ? 'Peminjaman' : 'Isi Ulang'}\nHarga: Rp ${detail['harga']}'),
+//             trailing: IconButton(
+//               icon: const Icon(Icons.delete, color: AppColors.redFlame),
+//               onPressed: () => controller.hapusDetail(index),
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+
+//   Widget _buildPembayaranSection() {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         const Text('Pembayaran',
+//             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+//         const SizedBox(height: 8),
+//         Obx(() => DropdownButtonFormField<String>(
+//               value: controller.metodePembayaran.value,
+//               decoration: InputDecoration(
+//                 labelText: 'Metode Pembayaran',
+//                 border:
+//                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//                 filled: true,
+//                 fillColor: AppColors.white,
+//               ),
+//               items: const [
+//                 DropdownMenuItem(value: 'tunai', child: Text('Tunai')),
+//                 DropdownMenuItem(value: 'transfer', child: Text('Transfer')),
+//               ],
+//               onChanged: (value) {
+//                 if (value != null) {
+//                   controller.metodePembayaran.value = value;
+//                 }
+//               },
+//               validator: (value) =>
+//                   value == null ? 'Pilih metode pembayaran' : null,
+//             )),
+//         const SizedBox(height: 8),
+//         TextFormField(
+//           decoration: InputDecoration(
+//             labelText: 'Jumlah Dibayar (Rp)',
+//             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//             filled: true,
+//             fillColor: AppColors.white,
+//           ),
+//           keyboardType: TextInputType.number,
+//           onChanged: (value) =>
+//               controller.jumlahDibayar.value = double.tryParse(value) ?? 0,
+//           validator: (value) =>
+//               value == null || value.isEmpty ? 'Masukkan jumlah dibayar' : null,
+//         ),
+//       ],
+//     );
+//   }
+
+//   FloatingActionButton _buildFAB() {
+//     return FloatingActionButton(
+//       onPressed: () {
+//         if (_formKey.currentState!.validate()) {
+//           controller.buatTransaksi();
+//         }
+//       },
+//       backgroundColor: AppColors.secondary,
+//       elevation: 6,
+//       child: const Icon(Icons.save, color: AppColors.white),
+//       tooltip: 'Simpan Transaksi',
+//     );
+//   }
+
+//   void _navigateToScanner(BuildContext context) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => ScannerScreen(
+//           onScan: (barcode) {
+//             if (barcode.barcodes.isNotEmpty) {
+//               controller.validasiTabung(barcode.barcodes.first.rawValue ?? '');
+//             }
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   ButtonStyle _buttonStyle() {
+//     return ElevatedButton.styleFrom(
+//       backgroundColor: AppColors.primaryBlue,
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+//     );
+//   }
+// }
+
+// class ScannerScreen extends StatelessWidget {
+//   final Function(BarcodeCapture) onScan;
+
+//   const ScannerScreen({super.key, required this.onScan});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Scan QR Code',
+//             style: TextStyle(color: AppColors.white)),
+//         backgroundColor: AppColors.primaryBlue,
+//         iconTheme: const IconThemeData(color: AppColors.white),
+//       ),
+//       body: MobileScanner(
+//         onDetect: (barcodeCapture) {
+//           onScan(barcodeCapture);
+//           Navigator.pop(context);
 //         },
-//         backgroundColor: AppColors.secondary,
-//         child: const Icon(Icons.add, color: Colors.white),
 //       ),
 //     );
 //   }
